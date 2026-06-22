@@ -21,7 +21,7 @@
 **方式一 · 插件市场(推荐)**
 
 ```
-/plugin marketplace add Jason-0409-G/research-to-paper
+/plugin marketplace add Jason-0409-G/scriptorium
 /plugin install research-to-paper@scriptorium
 /reload-plugins
 ```
@@ -29,8 +29,8 @@
 **方式二 · 脚本(克隆后本地安装)**
 
 ```bash
-git clone https://github.com/Jason-0409-G/research-to-paper.git
-cd research-to-paper
+git clone https://github.com/Jason-0409-G/scriptorium.git
+cd scriptorium
 bash install.sh claude          # macOS / Linux
 # Windows PowerShell:  .\install.ps1 -Target claude
 ```
@@ -39,8 +39,8 @@ bash install.sh claude          # macOS / Linux
 ### Codex
 
 ```bash
-git clone https://github.com/Jason-0409-G/research-to-paper.git
-cd research-to-paper
+git clone https://github.com/Jason-0409-G/scriptorium.git
+cd scriptorium
 bash install.sh codex           # macOS / Linux
 # Windows PowerShell:  .\install.ps1 -Target codex
 ```
@@ -61,7 +61,7 @@ bash install.sh codex           # macOS / Linux
 
 **脚本装的**
 ```bash
-cd research-to-paper   # 之前 clone 的目录
+cd scriptorium   # 之前 clone 的目录
 git pull
 bash install.sh all    # claude / codex / all
 ```

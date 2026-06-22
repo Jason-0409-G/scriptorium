@@ -36,7 +36,7 @@ Works in **Claude Code** and **Codex**.
 **Option 1 · Plugin marketplace (recommended)**
 
 ```
-/plugin marketplace add Jason-0409-G/research-to-paper
+/plugin marketplace add Jason-0409-G/scriptorium
 /plugin install research-to-paper@scriptorium
 /reload-plugins
 ```
@@ -44,8 +44,8 @@ Works in **Claude Code** and **Codex**.
 **Option 2 · Script (clone, then install locally)**
 
 ```bash
-git clone https://github.com/Jason-0409-G/research-to-paper.git
-cd research-to-paper
+git clone https://github.com/Jason-0409-G/scriptorium.git
+cd scriptorium
 bash install.sh claude          # macOS / Linux
 # Windows PowerShell:  .\install.ps1 -Target claude
 ```
@@ -54,8 +54,8 @@ Restart Claude Code, then just ask it to "follow the research-to-paper workflow"
 ### Codex
 
 ```bash
-git clone https://github.com/Jason-0409-G/research-to-paper.git
-cd research-to-paper
+git clone https://github.com/Jason-0409-G/scriptorium.git
+cd scriptorium
 bash install.sh codex           # macOS / Linux
 # Windows PowerShell:  .\install.ps1 -Target codex
 ```
@@ -79,7 +79,7 @@ session, or just restart Claude Code.
 
 **If installed via the script**
 ```bash
-cd research-to-paper   # the folder you cloned
+cd scriptorium   # the folder you cloned
 git pull
 bash install.sh all    # claude / codex / all
 ```

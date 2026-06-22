@@ -29,7 +29,7 @@ try:                                    # optional: load API creds from a .env-s
 except Exception:
     pass
 
-UA = {"User-Agent": "research-to-paper (https://github.com/Jason-0409-G/research-to-paper)"}
+UA = {"User-Agent": "research-to-paper (https://github.com/Jason-0409-G/scriptorium)"}
 TIMEOUT = 30
 EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 
