@@ -1,0 +1,8 @@
+{
+  "name": "research-to-paper",
+  "description": "Curate a DOI-verified literature library (imports into Zotero or EndNote, plus a by-category Excel) and orchestrate writing of a review/report/paper via PaperSpine. Adds CrossRef DOI cross-verification, a multi-agent adversarial review gate, and RIS/BibTeX export on top of paper-lookup and paper-spine.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Jason-0409-G"
+  }
+}

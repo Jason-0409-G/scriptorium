@@ -1,0 +1,22 @@
+[
+  {"query": "我想写一篇关于肠道菌群和抑郁症的综述，但还没想好从哪个角度切入，帮我从头理一遍：先定方向、再找文献核对一下、最后写出来", "should_trigger": true},
+  {"query": "帮我把这堆参考文献核对一下DOI，剔掉可能是假的，然后整理成能导进Zotero的库，我后面要写论文", "should_trigger": true},
+  {"query": "我有个大方向想做南极磷虾肠道菌的碳循环这块，先帮我确定研究角度和目标期刊，再建个文献库", "should_trigger": true},
+  {"query": "from a rough idea about CRISPR off-target detection methods, take me all the way to a draft review — scope the angle, build a verified reference library, then write it", "should_trigger": true},
+  {"query": "我准备投Ecological Indicators，先帮我定题目和切入点，把文献查好核对DOI，配个按主题分类的Excel给我看", "should_trigger": true},
+  {"query": "整理一下我这个课题的文献，核对每篇引用是不是真实存在的，最后导成EndNote能直接用的格式", "should_trigger": true},
+  {"query": "I need to go from 'microplastics in freshwater fish' to a written report for my supervisor — help me figure out the angle, gather verified references, and draft it", "should_trigger": true},
+  {"query": "导师让我写个研究报告，主题大概是深海热泉微生物的代谢潜力，先帮我把范围和角度定下来，再找权威文献", "should_trigger": true},
+  {"query": "把我Excel里这50来篇文献全核对一遍DOI、按主题分好类，然后我要写一篇综述", "should_trigger": true},
+  {"query": "帮我做个文献综述吧，从检索、核对、到写作一条龙，按我那套流程来", "should_trigger": true},
+  {"query": "查一下这个 DOI 10.1038/s41586-020-2649-2 对应的论文标题和作者", "should_trigger": false},
+  {"query": "帮我把这段摘要的英文润色一下，读起来更像Nature的风格", "should_trigger": false},
+  {"query": "给这一段话自动加上Nature系列和CNS的引用，分段标注", "should_trigger": false},
+  {"query": "把这篇论文做成一个组会汇报的中文PPT", "should_trigger": false},
+  {"query": "审稿人提了几条意见，帮我写个逐点回复的rebuttal letter", "should_trigger": false},
+  {"query": "帮我用ggplot2画一个发表级的多面板figure，比较四个处理组", "should_trigger": false},
+  {"query": "搜一下最近三年关于抗菌肽机器学习预测的论文都有哪些，给我个清单就行", "should_trigger": false},
+  {"query": "Nature投稿的data availability statement该怎么写", "should_trigger": false},
+  {"query": "帮我对这两组测序数据做个差异分析，看哪些基因显著", "should_trigger": false},
+  {"query": "把这个 results.csv 转成一个带格式的 xlsx 表格", "should_trigger": false}
+]

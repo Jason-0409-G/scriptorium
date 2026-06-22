@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.DS_Store
+# skill working outputs (don't commit generated libraries)
+**/library.ris
+**/library.bib
+**/library.xlsx
+**/library.csv
+*-workspace/
+.zotero_credentials
