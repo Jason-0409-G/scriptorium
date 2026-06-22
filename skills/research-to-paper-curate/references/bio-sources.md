@@ -1,0 +1,62 @@
+# Biology public interfaces (literature + resources)
+
+`bio_search.py` searches biology public databases with the standard library only — no external skill, no
+third-party package. It complements `search_papers.py` (which covers literature): use this when the user needs
+**resources** (sequences, structures, genes, taxa, assemblies) as well as papers.
+
+```
+python scripts/bio_search.py <db> "<query>" [--retmax 20] [--out results.json]
+python scripts/bio_search.py --list          # known interfaces
+python scripts/bio_search.py entrez-dbs       # live list of every NCBI database (einfo)
+```
+
+## NCBI Entrez (any database)
+
+One generic wrapper covers **every** NCBI Entrez database via E-utilities (esearch → esummary), so the same call
+works for literature, sequences, genes, taxa, structures, and more:
+
+| db | holds |
+|---|---|
+| `pubmed`, `pmc` | literature, full text |
+| `protein`, `nucleotide` / `nuccore`, `ipg` | sequences |
+| `gene`, `genome`, `assembly` | genes / genomes / assemblies |
+| `taxonomy` | organisms |
+| `sra`, `bioproject`, `biosample` | sequencing projects / samples |
+| `structure` | macromolecular structures (MMDB) |
+| `protfam`, `cdd`, `clinvar`, `snp`, ... | families / domains / variants |
+
+`--fetch fasta` (or `gb`) runs efetch instead of esummary to pull the raw records, e.g.
+`bio_search.py protein "pediocin PA-1" --fetch fasta --out seqs.fasta`.
+
+## Non-NCBI interfaces
+
+| name | source | returns |
+|---|---|---|
+| `uniprot` | UniProtKB REST | proteins (accession, name, organism, length) |
+| `pdb` | RCSB PDB search + data API | experimental structures (PDB id + title) |
+| `alphafold` | AlphaFold DB API | predicted structures for a **UniProt accession** (model + cif/pdb URLs) |
+| `europepmc` | Europe PMC | literature; `preprints` filters to preprints (SRC:PPR) |
+
+`alphafold`'s "query" is a UniProt accession (e.g. `bio_search.py alphafold P29430`), not free text.
+
+## API credentials (all optional)
+
+Credentials are read from a `.env` file by `_env.py`, searched in this order — the first that exists wins, and a
+real exported environment variable always beats the file:
+
+1. `$RESEARCH_TO_PAPER_ENV` (explicit path)
+2. `./.env` (current/working folder)
+3. `~/.config/research-to-paper/keys.env`
+
+Copy `.env.example` to one of those and fill in what you have. Nothing here requires a key:
+
+| variable | effect |
+|---|---|
+| `CROSSREF_MAILTO`, `NCBI_EMAIL` | join the faster "polite pool" (just an email, no signup) |
+| `NCBI_API_KEY` | NCBI 3 → 10 requests/sec across every Entrez db |
+| `S2_API_KEY` | higher Semantic Scholar rate limit |
+| `OPENALEX_API_KEY` | optional; a mailto already gets the polite pool |
+| `ZOTERO_API_KEY` + `ZOTERO_USER_ID` (or `ZOTERO_GROUP_ID`) | enable direct import into Zotero (`push_zotero.py`) |
+
+EndNote exposes no public item-creation API, so there is no direct-push for it — `export_refs.py` writes a `.ris`
+that EndNote imports natively (File → Import).

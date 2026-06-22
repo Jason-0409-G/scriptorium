@@ -9,4 +9,8 @@ __pycache__/
 *-workspace/
 .zotero_credentials
 _opt/
+# API credentials — never commit filled-in keys (keep only the template)
+.env
+*.env
+!.env.example
 

@@ -24,6 +24,11 @@ Usage: python verify_doi.py <papers.json|tsv|csv> <out.json|tsv|csv> [--mailto y
 import sys, os, json, csv, time, argparse, urllib.request, urllib.parse, urllib.error
 from difflib import SequenceMatcher
 
+try:                                    # optional: load API creds from a .env-style file
+    from _env import load_env; load_env()
+except Exception:
+    pass
+
 CR_WORK = "https://api.crossref.org/works/"
 CR_QUERY = "https://api.crossref.org/works"
 SIM_OK = 0.85          # title similarity above this = same paper

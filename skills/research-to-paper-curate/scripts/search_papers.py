@@ -14,15 +14,23 @@ Usage: python search_papers.py "<query>" <out.json> [--per-source 25]
 import sys, os, json, time, argparse, urllib.request, urllib.parse, urllib.error
 import xml.etree.ElementTree as ET
 
+try:                                    # optional: load API creds from a .env-style file
+    from _env import load_env; load_env()
+except Exception:
+    pass
+
 MAILTO = os.environ.get("CROSSREF_MAILTO", "research-to-paper@example.com")
 UA = {"User-Agent": f"research-to-paper (mailto:{MAILTO})"}
 TIMEOUT = 30
 
 
-def _get(url, tries=3, raw=False):
+def _get(url, tries=3, raw=False, headers=None):
+    h = dict(UA)
+    if headers:
+        h.update(headers)
     for i in range(tries):
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=TIMEOUT) as r:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=h), timeout=TIMEOUT) as r:
                 data = r.read().decode("utf-8", "replace")
             return data if raw else json.loads(data)
         except Exception:
@@ -41,8 +49,10 @@ def clean_doi(d):
 
 # ---- OpenAlex (free, no key, huge coverage) ----
 def openalex(q, n):
+    key = os.environ.get("OPENALEX_API_KEY", "")
     d = _get(f"https://api.openalex.org/works?search={urllib.parse.quote(q)}"
-             f"&per-page={n}&mailto={urllib.parse.quote(MAILTO)}")
+             f"&per-page={n}&mailto={urllib.parse.quote(MAILTO)}"
+             + (f"&api_key={urllib.parse.quote(key)}" if key else ""))
     out = []
     for w in ((d or {}).get("results") or []):
         # abstract is stored as an inverted index {word: [positions]}; rebuild it
@@ -82,15 +92,17 @@ def europepmc(q, n):
 # ---- PubMed (E-utilities) ----
 def pubmed(q, n):
     out, email = [], os.environ.get("NCBI_EMAIL", "")
+    key = os.environ.get("NCBI_API_KEY", "")
+    auth = ("&tool=research-to-paper"
+            + (f"&email={urllib.parse.quote(email)}" if email else "")
+            + (f"&api_key={urllib.parse.quote(key)}" if key else ""))
     base = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
-    ids = _get(f"{base}/esearch.fcgi?db=pubmed&retmax={n}&retmode=json&term={urllib.parse.quote(q)}"
-               + (f"&email={urllib.parse.quote(email)}&tool=research-to-paper" if email else "&tool=research-to-paper"))
+    ids = _get(f"{base}/esearch.fcgi?db=pubmed&retmax={n}&retmode=json&term={urllib.parse.quote(q)}" + auth)
     idlist = (((ids or {}).get("esearchresult") or {}).get("idlist")) or []
     if not idlist:
         return out
     time.sleep(0.4)
-    xml = _get(f"{base}/efetch.fcgi?db=pubmed&retmode=xml&id={','.join(idlist)}"
-               + (f"&email={urllib.parse.quote(email)}&tool=research-to-paper" if email else "&tool=research-to-paper"), raw=True)
+    xml = _get(f"{base}/efetch.fcgi?db=pubmed&retmode=xml&id={','.join(idlist)}" + auth, raw=True)
     try:
         root = ET.fromstring(xml) if xml else None
     except ET.ParseError:
@@ -113,8 +125,10 @@ def pubmed(q, n):
 
 # ---- Semantic Scholar ----
 def semantic_scholar(q, n):
+    key = os.environ.get("S2_API_KEY", "")
     d = _get(f"https://api.semanticscholar.org/graph/v1/paper/search?limit={n}"
-             f"&fields=title,authors,year,venue,abstract,externalIds&query={urllib.parse.quote(q)}")
+             f"&fields=title,authors,year,venue,abstract,externalIds&query={urllib.parse.quote(q)}",
+             headers={"x-api-key": key} if key else None)
     out = []
     for p in ((d or {}).get("data") or []):
         out.append(dict(title=p.get("title", ""),

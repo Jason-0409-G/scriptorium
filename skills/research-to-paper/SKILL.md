@@ -12,7 +12,9 @@ description: >-
   research-to-paper-write, not here. For a single piece, use the sub-skill
   directly — angle/journal → research-to-paper-scope; verify references / export a library → research-to-paper-curate;
   draft or rewrite → research-to-paper-write; review/audit a draft → research-to-paper-audit; de-AI / 降AI率 →
-  research-to-paper-humanize; export to LaTeX/Word/PDF → research-to-paper-build.
+  research-to-paper-humanize; export to LaTeX/Word/PDF → research-to-paper-build. Checking whether a run's
+  artifacts are complete, or whether a draft's [@key] / \cite{} citations resolve against library.bib (just
+  checking that they resolve, NOT rendering them) → research-to-paper's own artifact_check / cite_check scripts.
 ---
 
 # Research-to-Paper (orchestrator)

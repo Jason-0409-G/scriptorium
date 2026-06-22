@@ -1,14 +1,18 @@
 ---
 name: research-to-paper-curate
 description: >-
-  Build a trustworthy literature library with NO dependency on any other skill: search several databases, verify
-  every DOI against CrossRef (catching dead DOIs and the worse case of a DOI that resolves to the wrong paper),
-  run a multi-agent adversarial review to reject fabricated or mis-attributed references, then export a single RIS
-  that imports into both Zotero and EndNote, plus BibTeX and a by-category, color-coded Excel. Use whenever the
-  user wants to collect, check, or export references, e.g. 整理文献库, 把这批参考文献核对一下DOI, 核对引用是否真实,
-  导成能进EndNote或Zotero的库, 给文献配个分类Excel, "verify these DOIs", "check these citations are real",
-  "export these papers to EndNote", "build me a reference library". Runs the bundled scripts search_papers.py,
-  verify_doi.py and export_refs.py; takes optional category themes from a scope_brief.md.
+  Build a trustworthy literature library with NO dependency on any other skill: search five literature databases
+  (OpenAlex, Europe PMC, PubMed, Semantic Scholar, CrossRef), verify every DOI against CrossRef (catching dead DOIs
+  and the worse case of a DOI that resolves to the wrong paper), run a multi-agent adversarial review to reject
+  fabricated or mis-attributed references, then either import straight into Zotero (via its Web API, one collection
+  per category, when ZOTERO_API_KEY is set) or export a single RIS that imports into both Zotero and EndNote, plus
+  BibTeX and a by-category, color-coded Excel. It also searches biology RESOURCE databases — any NCBI Entrez db
+  (protein, nucleotide, gene, taxonomy, assembly, structure, SRA, BioProject, ...) plus UniProt, RCSB PDB, AlphaFold
+  and Europe PMC. Use whenever the user wants to collect, check, search, or export references or bio records, e.g.
+  整理文献库, 把这批参考文献核对一下DOI, 核对引用是否真实, 导成能进EndNote或Zotero的库, 直接导入Zotero, 给文献配个分类Excel,
+  搜NCBI/蛋白/序列/结构数据库, "verify these DOIs", "check these citations are real", "export these papers to EndNote",
+  "search UniProt/PDB/NCBI", "build me a reference library". Runs the bundled scripts search_papers.py, verify_doi.py,
+  export_refs.py, bio_search.py and push_zotero.py; takes optional category themes from a scope_brief.md.
 ---
 
 # Curate — build a DOI-verified literature library
@@ -23,10 +27,19 @@ to judge relevance. Otherwise infer reasonable categories from the topic and con
 
 ## Step 1 — Search
 
-Run `scripts/search_papers.py "<query>" <papers.json>`. It queries PubMed, Semantic Scholar, and CrossRef, then
-merges and de-duplicates by DOI → normalized title — all with stdlib, no installs, no external skill. Set
-`CROSSREF_MAILTO` / `NCBI_EMAIL` to be polite to the APIs. Then assign each paper a `category` from the scope
-themes. If the user already pasted a reference list, skip the search and start from their list.
+Run `scripts/search_papers.py "<query>" <papers.json>`. It queries five sources — OpenAlex, Europe PMC, PubMed,
+Semantic Scholar, and CrossRef — then merges and de-duplicates by DOI → normalized title, all with stdlib, no
+installs, no external skill. Then assign each paper a `category` from the scope themes. If the user already pasted a
+reference list, skip the search and start from their list.
+
+For biology **resource** databases (sequences, structures, genes, taxa — not just papers), use
+`scripts/bio_search.py <db> "<query>"`: any NCBI Entrez database (protein, nucleotide, gene, taxonomy, assembly,
+structure, SRA, BioProject, ...) plus UniProt, RCSB PDB, AlphaFold and Europe PMC. `bio_search.py --list` shows the
+interfaces; `--fetch fasta` pulls sequences. Details in `references/bio-sources.md`.
+
+API credentials are optional and read from a `.env` file (see `.env.example` + `references/bio-sources.md`): setting
+`CROSSREF_MAILTO` / `NCBI_EMAIL` joins the faster polite pool, and `NCBI_API_KEY` / `S2_API_KEY` raise rate limits.
+Nothing here requires a key.
 
 ## Step 2 — Verify every DOI
 
@@ -43,11 +56,18 @@ DOI-attribution, relevance/categorization). The exact prompts and the pass/fail 
 off-topic or mis-categorized papers are demoted (kept, marked "needs user confirmation"), not silently dropped.
 Show the user a verdict table with a reason for every rejection — the gate informs the user; the user decides.
 
-## Step 4 — Export
+## Step 4 — Import or export (branch on credentials)
 
-Run `scripts/export_refs.py <verified> <outdir>`. It writes `library.ris` (imports natively into both Zotero and
-EndNote — no API or credentials needed), `library.bib` (LaTeX), and `library.xlsx` (by-category, color-coded; falls
-back to `.csv` if openpyxl is missing). Tell the user to import `library.ris` into whichever manager they use.
+Two paths, chosen by whether Zotero credentials are present:
+
+- **Direct import to Zotero** — if `ZOTERO_API_KEY` + `ZOTERO_USER_ID` (or `ZOTERO_GROUP_ID`) are set, run
+  `scripts/push_zotero.py <verified>`. It creates one Zotero collection per category and pushes the verified items
+  straight into the user's library through the Zotero Web API. This writes to their library, so confirm first;
+  `--dry-run` previews the payload without posting.
+- **Import file** — otherwise (and always for EndNote, which exposes no public item-creation API), run
+  `scripts/export_refs.py <verified> <outdir>`. It writes `library.ris` (imports natively into both Zotero and
+  EndNote), `library.bib` (LaTeX), and `library.xlsx` (by-category, color-coded; falls back to `.csv` if openpyxl is
+  missing). Tell the user to import `library.ris` (File → Import) into whichever manager they use.
 
 ## Deliver
 
@@ -57,7 +77,11 @@ why, then point to the three library files. If this was part of the full workflo
 
 ## Files
 
-- `scripts/search_papers.py` — self-contained multi-database search (PubMed + Semantic Scholar + CrossRef).
+- `scripts/search_papers.py` — five-source literature search (OpenAlex + Europe PMC + PubMed + Semantic Scholar + CrossRef).
+- `scripts/bio_search.py` — biology resource search: any NCBI Entrez db + UniProt / RCSB PDB / AlphaFold / Europe PMC.
 - `scripts/verify_doi.py` — CrossRef DOI cross-verification.
-- `scripts/export_refs.py` — RIS + BibTeX + by-category Excel export.
+- `scripts/export_refs.py` — RIS + BibTeX + by-category Excel (the no-credentials import file).
+- `scripts/push_zotero.py` — direct import into Zotero via its Web API (when credentials are set).
+- `scripts/_env.py` — loads optional API credentials from a `.env` file.
 - `references/adversarial-review.md` — reviewer-agent prompts, lenses, pass/fail rule.
+- `references/bio-sources.md` — every integrated interface + credentials setup.

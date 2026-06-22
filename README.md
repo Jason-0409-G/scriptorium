@@ -52,7 +52,7 @@ bash install.sh codex           # macOS / Linux
 |---|---|
 | **research-to-paper** | 主编排。识别当前所处环节,按需将请求导入 **确定方向 → 建库 → 写作 → 排版**,各环节均可独立调用。 |
 | **research-to-paper-scope** | **确定方向**。先检索权威文献以厘清领域脉络,再以逐项确认的方式依次定下:切入角度 / 研究问题 → 范围 → **目标期刊** → **篇幅字数** → 核心子主题;目标期刊一经确定,即**联网查询该刊投稿要求**(收录范围、文章类型、篇幅、结构、引用格式)。产出 `scope_brief.md`。 |
-| **research-to-paper-curate** | **建立文献库**。五源检索(OpenAlex / Europe PMC / PubMed / Semantic Scholar / Crossref)→ 逐篇经 **CrossRef 核验 DOI**(可识别"能够解析但指向错误文献"的情形并找回正确 DOI)→ **多 agent 对抗审查**,剔除伪造与错误归属的条目 → 导出 **RIS(Zotero/EndNote 通用)+ BibTeX + 按主题着色的 Excel**。 |
+| **research-to-paper-curate** | **建立文献库 + 资源检索**。五源文献检索(OpenAlex / Europe PMC / PubMed / Semantic Scholar / Crossref)→ 逐篇经 **CrossRef 核验 DOI**(可识别"能够解析但指向错误文献"的情形并找回正确 DOI)→ **多 agent 对抗审查**,剔除伪造与错误归属的条目 → **配置了 Zotero API 即按分类直接导入**,否则导出 **RIS(Zotero/EndNote 通用)+ BibTeX + 按主题着色的 Excel**。另可检索生物**资源**库:任意 NCBI Entrez 库(蛋白 / 核酸 / 基因 / 物种 / 组装 / 结构 / SRA …)+ UniProt / RCSB PDB / AlphaFold / Europe PMC。 |
 | **research-to-paper-write** | **写作**。先理解内容、复述核心论点并与用户确认 → 列**逐单元 rationale 矩阵**(不套用固定 IMRaD 模板)→ 按**证据对冲**原则起草(模型 / 基因层面仅作 predict、整体实测方可 confirm);并编排后续审稿与去 AI 环节。提供三个版本:综述 / 报告 / 论文。 |
 | **research-to-paper-audit** | **多轮对抗审稿**。调度 **3 个相互独立的审稿 agent**(claim 支撑 / 逻辑结构 / 引用证据)与主编综合,**循环审至一轮无新问题为止**;重点检出过度声称、缺乏依据的 claim、结果区混入解读、改动流于表面、引用无法支撑其所在句等问题。可单独调用("审阅这篇草稿")。 |
 | **research-to-paper-humanize** | **降低 AI 痕迹**。沿**五个维度**改写:**D1 句长(长短句结合)**、D2 段落结构变化、D3 信息密度起伏、D4 连接词控制(删除"首先 / 其次 / 此外 / 值得注意的是"等)、D5 术语表述变体;分 light / medium / heavy 三档,每处改动登记入 `humanize_matrix.md`,再以 `humanize_check.py` 作**量化校验**。可单独调用("降低这段文字的 AI 痕迹")。 |
@@ -69,7 +69,7 @@ bash install.sh codex           # macOS / Linux
 - **`openpyxl`**(Python)— 用于生成着色 `.xlsx`;缺失时 curate 改为输出 `.csv`,RIS / BibTeX 不受影响。
 - **`pandoc`** — `research-to-paper-build` 输出 LaTeX / Word 所必需(`brew install pandoc` / `apt install pandoc` / Windows 用 winget 或 choco)。
 - **TeX 引擎**(xelatex / pdflatex)— 仅 PDF 需要;缺失时仍会输出 `.tex`,可另行编译。
-- 将 **`CROSSREF_MAILTO`** / **`NCBI_EMAIL`** 设为你的邮箱,API 会将请求纳入响应更快的 polite 池。
+- **API 凭据(全部可选)** — 复制 `.env.example` 为 `.env`(或 `~/.config/research-to-paper/keys.env`)填入:`CROSSREF_MAILTO` / `NCBI_EMAIL` 进更快的 polite 池;`NCBI_API_KEY` / `S2_API_KEY` 提升限速;`ZOTERO_API_KEY` + `ZOTERO_USER_ID` 则把文献**直接按分类导入 Zotero**(EndNote 无公开写入 API,仍走 `.ris` 文件导入)。`.env` 已被 gitignore,不入仓库;无任何 key 也能用。
 
 ---
 
