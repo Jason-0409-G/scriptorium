@@ -6,6 +6,24 @@
 
 ---
 
+## 0 · 一键安装(推荐先试这个)
+
+懒人路径:用仓库里的 [`setup-windows.ps1`](../setup-windows.ps1),自动装 Node + Claude Code + 本 skill,并(可选)配好 DeepSeek 后端。
+
+1. 打开 <https://github.com/Jason-0409-G/research-to-paper/blob/main/setup-windows.ps1>,点右上角 **Download raw file** 存到电脑(比如桌面)。
+2. 用**记事本**打开它,把 `$DeepSeekApiKey = ""` 引号里换成你的 DeepSeek API Key(不想用 DeepSeek、走官方登录就留空)。
+3. 在该文件所在文件夹开 **PowerShell**,运行:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File .\setup-windows.ps1
+   ```
+   若提示文件被阻止,先运行 `Unblock-File .\setup-windows.ps1` 再执行上一条。
+4. 装完**重开一个 PowerShell**,输入 `claude` 即可开始。
+
+> ⚠️ 填好 key 的脚本带个人凭据——**别提交到 Git、别公开**。要给别人用就把填好的副本**私下**发给对方,或让对方填自己的 DeepSeek key。
+> 脚本跑失败、或想弄懂每一步,继续看下面的手动步骤。
+
+---
+
 ## 1. 选终端
 
 用 **PowerShell** 或 **Windows Terminal**(推荐)。怎么区分:
