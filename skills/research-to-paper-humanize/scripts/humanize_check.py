@@ -27,6 +27,7 @@ CONNECTORS = {
            "on the one hand", "on the other hand", "overall"],
 }
 SENT_SPLIT = {"zh": r"[。！？；\n]", "en": r"[.!?]\s"}
+EN_ABBR = re.compile(r"\b(?:Dr|Mr|Mrs|Ms|Prof|Fig|Eq|No|al|vs|cf|etc|e\.g|i\.e)\.", re.I)
 
 
 def strip_noise(text):
@@ -35,12 +36,16 @@ def strip_noise(text):
     text = re.sub(r"`[^`]*`", " ", text)                     # inline code
     text = re.sub(r"\$[^$]*\$", " ", text)                   # math
     text = re.sub(r"\[[^\]]*\]\([^)]*\)", " ", text)         # md links
-    text = re.sub(r"^[#>\-\*\|].*$", " ", text, flags=re.M)  # headings/lists/tables
+    text = re.sub(r"^(#{1,6}\s|>\s|[-*+]\s|\|).*$", " ", text, flags=re.M)  # headings/lists/tables
     return text
 
 
 def sentences(text, lang):
+    if lang == "en":
+        text = EN_ABBR.sub(lambda m: m.group(0).replace(".", "\x00"), text)
     parts = re.split(SENT_SPLIT[lang], text)
+    if lang == "en":
+        parts = [p.replace("\x00", ".") for p in parts]
     return [p.strip() for p in parts if len(p.strip()) >= 2]
 
 
@@ -53,7 +58,9 @@ def main():
     ap.add_argument("draft")
     ap.add_argument("--lang", choices=["zh", "en"], default="zh")
     ap.add_argument("--matrix", default=None)
+    ap.add_argument("--tier", choices=["light", "medium", "heavy"], default="medium")
     a = ap.parse_args()
+    max_conn = 4.0 if a.tier == "heavy" else 6.0
 
     raw = open(a.draft, encoding="utf-8").read()
     prose = strip_noise(raw)
@@ -70,13 +77,16 @@ def main():
             f"D1 句长 stddev={sd} (人类>{thr}); 短句占比={short_frac:.0%}"
             + ("" if sd >= thr else " → 太均匀,加长短句对比"))
     # D4 connector density
-    conn = sum(len(re.findall(re.escape(c), prose, flags=re.I)) for c in CONNECTORS[a.lang])
-    dens = round(conn / (nchar / 1000), 2) if nchar else 0
-    (ok if dens <= MAX_CONNECTOR_PER_1K else flags).append(
-        f"D4 连接词密度={dens}/千字 (上限{MAX_CONNECTOR_PER_1K})"
-        + ("" if dens <= MAX_CONNECTOR_PER_1K else " → 删 AI 高频连接词,别放段首"))
+    if nchar >= 200:
+        conn = sum(len(re.findall(re.escape(c), prose, flags=re.I)) for c in CONNECTORS[a.lang])
+        dens = round(conn / (nchar / 1000), 2) if nchar else 0
+        (ok if dens <= max_conn else flags).append(
+            f"D4 连接词密度={dens}/千字 (上限{max_conn})"
+            + ("" if dens <= max_conn else " → 删 AI 高频连接词,别放段首"))
+    else:
+        ok.append("D4 连接词密度: 文本过短(<200字)跳过")
     # dash separators
-    dash = len(re.findall(r"[—\-]{3,}|——", raw))
+    dash = len(re.findall(r"—{3,}|-{4,}", prose))
     (ok if dash == 0 else flags).append(
         f"长横线分隔符={dash}" + ("" if dash == 0 else " → 删掉,用空行/标题代替"))
     # matrix coverage
@@ -85,12 +95,12 @@ def main():
             mt = open(a.matrix, encoding="utf-8").read()
             rows = sum(1 for l in mt.splitlines() if l.strip().startswith("|")
                        and not set(l.replace("|", "").strip()) <= {"-", ":", " "})
-            rows = max(0, rows - 1)
+            rows = max(0, rows - 1)  # 假设恰好一行表头
             paras = len([p for p in re.split(r"\n\s*\n", prose) if len(p.strip()) > 40])
             cov = rows / paras if paras else 1.0
             (ok if cov >= MIN_MATRIX_COVERAGE else flags).append(
                 f"humanize_matrix 覆盖={cov:.0%} ({rows}行/{paras}段)"
-                + ("" if cov >= MIN_MATRIX_COVERAGE else " → 每段至少记一行改动"))
+                + ("" if cov >= MIN_MATRIX_COVERAGE else " → 覆盖偏低，已改动的段落都要在矩阵里记一行"))
         except OSError:
             flags.append(f"找不到 matrix: {a.matrix}")
 

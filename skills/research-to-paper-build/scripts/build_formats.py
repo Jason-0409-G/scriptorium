@@ -17,9 +17,12 @@ def have(tool):
     return shutil.which(tool) is not None
 
 
-def run(cmd):
+def run(cmd, timeout=600):
     print("  $ " + " ".join(cmd))
-    return subprocess.run(cmd, capture_output=True, text=True)
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return subprocess.CompletedProcess(cmd, 1, "", f"timed out after {timeout}s")
 
 
 def main():
@@ -47,6 +50,8 @@ def main():
     outs = []
     # Word
     docx = os.path.join(a.outdir, base + ".docx")
+    if a.reference_docx and not os.path.exists(a.reference_docx):
+        print(f"[build] 注: 未找到参考模板 {a.reference_docx}, 用默认 Word 样式")
     ref = ["--reference-doc", a.reference_docx] if a.reference_docx and os.path.exists(a.reference_docx) else []
     r = run(["pandoc", a.manuscript, *cite, *ref, "-o", docx])
     outs.append((docx, r.returncode == 0, r.stderr.strip()))
@@ -68,6 +73,10 @@ def main():
     fail = 0
     for path, ok, err in outs:
         print(f"  {'✓' if ok else '✗'} {path}" + ("" if ok else f"   ERR: {err[:140]}"))
+        if ok and cite and err:
+            warns = [ln for ln in err.splitlines() if "Citeproc" in ln or "not found" in ln]
+            if warns:
+                print("    [build] 引用警告: " + "; ".join(warns))
         fail += 0 if ok else 1
     print(f"[build] {'全部成功' if not fail else f'{fail} 个失败'}; "
           "引用未解析时检查 manuscript 是否用 [@key] 且 key 对应 library.bib")

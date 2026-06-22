@@ -74,7 +74,9 @@ one or two questions openly unresolved.
 
 ## What "passing" means
 
-`humanize_check.py` flags a draft when: sentence-length stddev is too low (human prose runs > 10; uniform AI prose
-is lower), connector density exceeds the tier threshold, dash separators appear, or the matrix does not cover the
-paragraphs. Iterate until those clear. But the numbers are a floor, not the goal — read the prose aloud; if it
-sounds like a person making an argument, it will also pass.
+`humanize_check.py` auto-verifies only **D1 and D4** (plus dash separators and matrix coverage): it flags a draft
+when sentence-length stddev is too low (human prose runs > 10; uniform AI prose is lower), connector density
+exceeds the tier threshold (`--tier heavy` lowers the ceiling to ≤4/1000), dash separators appear, or the matrix
+does not cover the paragraphs. It does **not** measure D2, D3, or D5 — those are verified by reading the
+`humanize_matrix.md` rows and the prose itself. Iterate until the checked signals clear. But the numbers are a
+floor, not the goal — read the prose aloud; if it sounds like a person making an argument, it will also pass.

@@ -28,14 +28,14 @@ academic writing; varying it makes a stronger argument that also happens to read
    human-like (and the user accepts more aggressive rewording). The tiers are cumulative.
 
 2. **Apply the five-dimension rules** in `references/humanize-rules.md`:
-   - **D1 sentence length (长短句)** — every 3-4 sentences, one deviates sharply (very short or long); never three
-     sentences in a row within a narrow length band. A long clause-stacked setup followed by a short pivot is the
-     signature rhythm.
-   - **D2 paragraph structure** — rotate paragraph templates; adjacent paragraphs must differ in shape.
-   - **D3 information density** — dense claim paragraphs alternate with light transition paragraphs.
-   - **D4 connectors** — drop the AI-frequent connectors; keep ≤6 (light/medium) or ≤4 (heavy) per 1000 chars, and
-     never at a paragraph's first word.
-   - **D5 term-context** — occasionally substitute an accurate synonym for a standard term (heavy tier).
+   - **D1 sentence length (长短句)** (light+) — every 3-4 sentences, one deviates sharply (very short or long); never
+     three sentences in a row within a narrow length band. A long clause-stacked setup followed by a short pivot is
+     the signature rhythm.
+   - **D2 paragraph structure** (medium+) — rotate paragraph templates; adjacent paragraphs must differ in shape.
+   - **D3 information density** (medium+) — dense claim paragraphs alternate with light transition paragraphs.
+   - **D4 connectors** (light+) — drop the AI-frequent connectors; keep ≤6 (light/medium) or ≤4 (heavy) per 1000
+     chars, and never at a paragraph's first word.
+   - **D5 term-context** (heavy) — occasionally substitute an accurate synonym for a standard term.
 
 3. **Record every change in `humanize_matrix.md`** — one row per unit (unit, AI pattern, dimension, severity,
    change, expected effect, teaching note). Never edit silently; the matrix is how the user sees and judges each
@@ -48,12 +48,14 @@ academic writing; varying it makes a stronger argument that also happens to read
 5. **Verify quantitatively.** Run the checker and iterate until it passes:
 
    ```
-   python scripts/humanize_check.py <draft.md> --lang zh   # or en
+   python scripts/humanize_check.py <draft.md> --lang zh --tier medium   # or en; --tier {light,medium,heavy}, default medium
    ```
 
-   It measures sentence-length variability (human prose runs stddev > ~10 for Chinese characters; flatter = AI),
-   connector density, and dash misuse, and (with `--matrix humanize_matrix.md`) checks the matrix covers the
-   paragraphs. The numbers are a floor, not the goal — read the result aloud; if it sounds like a person making an
+   The checker auto-verifies only **D1** (sentence-length stddev — human prose runs > ~10 for Chinese characters;
+   flatter = AI) and **D4** (connector density against the tier threshold; `--tier heavy` lowers the connector
+   ceiling to ≤4/1000), plus dash separators and (with `--matrix humanize_matrix.md`) whether the matrix covers the
+   paragraphs. It does **not** check D2, D3, or D5 — verify those by reading the `humanize_matrix.md` rows and the
+   prose itself. The numbers are a floor, not the goal — read the result aloud; if it sounds like a person making an
    argument, it has passed.
 
 ## Files

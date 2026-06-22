@@ -29,6 +29,7 @@ CR_QUERY = "https://api.crossref.org/works"
 SIM_OK = 0.85          # title similarity above this = same paper
 THROTTLE = 0.4         # seconds between requests (be polite)
 TIMEOUT = 25
+UNREACHABLE = object()  # sentinel: transient failure (429/5xx) — NOT a dead DOI
 
 
 def norm(s):
@@ -51,10 +52,16 @@ def _get(url, mailto, tries=3):
         except urllib.error.HTTPError as e:
             if e.code == 404:
                 return None          # dead DOI / no record
-            time.sleep(2 ** i)
+            wait = 2 ** i
+            ra = e.headers.get("Retry-After") if e.headers else None
+            try:
+                wait = max(wait, min(int(ra), 60))
+            except (TypeError, ValueError):
+                pass
+            time.sleep(wait)
         except Exception:
             time.sleep(2 ** i)
-    return None
+    return UNREACHABLE             # exhausted on transient errors — not dead
 
 
 def cr_title_of(msg):
@@ -63,13 +70,19 @@ def cr_title_of(msg):
 
 
 def lookup_doi(doi, mailto):
-    """Return (cr_title, ok) for a DOI; ok=False means dead/unreachable."""
+    """Return (cr_title, ok, reachable) for a DOI.
+
+    ok=False means not verified; reachable=False means CrossRef was never
+    reached (transient 429/5xx) so the DOI must NOT be called dead.
+    """
     if not doi:
-        return "", False
+        return "", False, True
     data = _get(CR_WORK + urllib.parse.quote(doi.strip()), mailto)
+    if data is UNREACHABLE:
+        return "", False, False
     if not data or "message" not in data:
-        return "", False
-    return cr_title_of(data["message"]), True
+        return "", False, True
+    return cr_title_of(data["message"]), True, True
 
 
 def search_title(title, mailto):
@@ -93,7 +106,7 @@ def classify(row, mailto):
     title = row.get("title", "")
     doi = (row.get("doi", "") or "").strip()
     if doi:
-        ct, ok = lookup_doi(doi, mailto)
+        ct, ok, reachable = lookup_doi(doi, mailto)
         time.sleep(THROTTLE)
         if ok:
             s = sim(title, ct)
@@ -103,9 +116,10 @@ def classify(row, mailto):
             bdoi, bct, bs = search_title(title, mailto); time.sleep(THROTTLE)
             return dict(doi_status="mismatch", verified_doi=(bdoi if bs >= SIM_OK else ""),
                         cr_title=ct, title_sim=s)
-        # DOI dead → try to recover by title
+        # not ok: dead only if CrossRef was actually reached; else merely throttled
+        status = "dead" if reachable else "unverified"
         bdoi, bct, bs = search_title(title, mailto); time.sleep(THROTTLE)
-        return dict(doi_status="dead", verified_doi=(bdoi if bs >= SIM_OK else ""),
+        return dict(doi_status=status, verified_doi=(bdoi if bs >= SIM_OK else ""),
                     cr_title=bct, title_sim=bs)
     # no DOI at all → propose one from title search
     bdoi, bct, bs = search_title(title, mailto); time.sleep(THROTTLE)

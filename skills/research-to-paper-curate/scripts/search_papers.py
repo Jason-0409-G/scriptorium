@@ -84,12 +84,13 @@ def pubmed(q, n):
     out, email = [], os.environ.get("NCBI_EMAIL", "")
     base = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
     ids = _get(f"{base}/esearch.fcgi?db=pubmed&retmax={n}&retmode=json&term={urllib.parse.quote(q)}"
-               + (f"&email={email}" if email else ""))
+               + (f"&email={urllib.parse.quote(email)}&tool=research-to-paper" if email else "&tool=research-to-paper"))
     idlist = (((ids or {}).get("esearchresult") or {}).get("idlist")) or []
     if not idlist:
         return out
     time.sleep(0.4)
-    xml = _get(f"{base}/efetch.fcgi?db=pubmed&retmode=xml&id={','.join(idlist)}", raw=True)
+    xml = _get(f"{base}/efetch.fcgi?db=pubmed&retmode=xml&id={','.join(idlist)}"
+               + (f"&email={urllib.parse.quote(email)}&tool=research-to-paper" if email else "&tool=research-to-paper"), raw=True)
     try:
         root = ET.fromstring(xml) if xml else None
     except ET.ParseError:
@@ -143,6 +144,13 @@ def crossref(q, n):
     return out
 
 
+def _norm(rec):
+    for k in ("title", "authors", "year", "journal", "doi", "abstract", "source"):
+        if rec.get(k) is None:
+            rec[k] = ""
+    return rec
+
+
 def merge(lists):
     by_key, order = {}, []
     for src in lists:
@@ -154,10 +162,10 @@ def merge(lists):
                 ex = by_key[key]
                 ex["source"] = ",".join(sorted(set(ex["source"].split(",") + p["source"].split(","))))
                 for f in ("abstract", "doi", "journal", "authors"):   # keep the fuller value
-                    if len(p.get(f, "")) > len(ex.get(f, "")):
-                        ex[f] = p[f]
+                    if len(p.get(f) or "") > len(ex.get(f) or ""):
+                        ex[f] = p.get(f) or ""
             else:
-                by_key[key] = dict(p); order.append(key)
+                by_key[key] = _norm(dict(p)); order.append(key)
     return [by_key[k] for k in order]
 
 

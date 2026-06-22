@@ -45,7 +45,9 @@ machine-generated. This is adversarial collaboration, not one-shot generation.
 
 4. **Review — hand to `research-to-paper-audit`.**
    Do not self-approve. Run the audit sub-skill: three independent reviewers (claim-support, logic, citation
-   integrity) plus Editor Synthesis, re-run until a round is clean. Apply its fixes before moving on.
+   integrity) plus Editor Synthesis, re-run until a round is clean. Pass the scene (综述/报告/论文, chosen from the
+   user or the `scope_brief.md` per "Three versions") to the audit so reviewers apply scene-appropriate structural
+   criteria. Apply its fixes before moving on.
 
 5. **De-AI — hand to `research-to-paper-humanize`.**
    Run the humanize sub-skill on the reviewed draft: the five-dimension pass (长短句 / paragraph variety / density /

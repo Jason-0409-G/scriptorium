@@ -17,10 +17,21 @@ Output : <outdir>/library.ris, library.bib, and library.xlsx (or library.csv fal
 
 Usage: python export_refs.py <verified.json|tsv|csv> <outdir>
 """
-import sys, os, json, csv, re, argparse
+import sys, os, json, csv, re, html, argparse
 
 STATUS_FILL = {"verified": "C6EFCE", "candidate": "FFEB9C", "mismatch": "FFC7CE",
                "dead": "FFC7CE", "no_doi": "F2F2F2"}   # green / yellow / red / red / grey
+
+
+def clean_text(s):
+    """Strip XML/JATS tags, unescape entities, collapse whitespace to one line."""
+    if not s:
+        return ""
+    if isinstance(s, list):
+        s = " ".join(str(x) for x in s)
+    s = re.sub(r"<[^>]+>", "", str(s))
+    s = html.unescape(s)
+    return " ".join(s.split())
 
 
 def read_rows(path):
@@ -62,9 +73,14 @@ def bib_key(row, used):
     au = author_list(row)
     k = re.sub(r"[^A-Za-z0-9]", "", surname(au[0]) if au else "anon") or "ref"
     k = f"{k}{row.get('year','')}"
-    n, base = 1, k
+    n, base = 0, k
     while k in used:
-        n += 1; k = f"{base}{chr(96+n)}"
+        n += 1
+        suf, x = "", n
+        while x:
+            x, r = divmod(x - 1, 26)
+            suf = chr(97 + r) + suf
+        k = f"{base}{suf}"
     used.add(k)
     return k
 
@@ -75,12 +91,16 @@ def write_ris(rows, path):
     for r in rows:
         out.append("TY  - JOUR")
         for au in author_list(r):
+            if "," not in au:
+                toks = au.split()
+                if len(toks) > 1:
+                    au = f"{toks[-1]}, {' '.join(toks[:-1])}"
             out.append(f"AU  - {au}")
-        if r.get("title"):   out.append(f"TI  - {r['title']}")
+        if r.get("title"):   out.append(f"TI  - {clean_text(r['title'])}")
         if r.get("year"):    out.append(f"PY  - {r['year']}")
-        if r.get("journal"): out.append(f"JO  - {r['journal']}")
+        if r.get("journal"): out.append(f"JO  - {clean_text(r['journal'])}")
         if best_doi(r):      out.append(f"DO  - {best_doi(r)}")
-        if r.get("abstract"):out.append(f"AB  - {r['abstract']}")
+        if r.get("abstract"):out.append(f"AB  - {clean_text(r['abstract'])}")
         if r.get("category"):out.append(f"KW  - {r['category']}")
         out.append("ER  - ")
         out.append("")
@@ -97,9 +117,9 @@ def write_bib(rows, path):
         key = bib_key(r, used)
         au = " and ".join(author_list(r))
         out.append(f"@article{{{key},")
-        out.append(f"  title = {{{bibtex_escape(r.get('title',''))}}},")
+        out.append(f"  title = {{{bibtex_escape(clean_text(r.get('title','')))}}},")
         if au:                out.append(f"  author = {{{bibtex_escape(au)}}},")
-        if r.get("journal"):  out.append(f"  journal = {{{bibtex_escape(r['journal'])}}},")
+        if r.get("journal"):  out.append(f"  journal = {{{bibtex_escape(clean_text(r['journal']))}}},")
         if r.get("year"):     out.append(f"  year = {{{r['year']}}},")
         if best_doi(r):       out.append(f"  doi = {{{best_doi(r)}}},")
         out.append("}\n")

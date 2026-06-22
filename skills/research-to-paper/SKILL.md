@@ -8,7 +8,8 @@ description: >-
   and BUILD (render to LaTeX/Word/PDF). WRITE is backed by an AUDIT step (independent multi-reviewer rounds) and a
   HUMANIZE step (five-dimension de-AI incl. 长短句). Use whenever a request spans more than one stage, for example
   帮我从定方向到写出来, 做文献综述, 整理文献库并核对DOI再写论文, 从一个想法做到初稿, 我想投某期刊先定方向再建库再写,
-  按我的流程写论文/综述/报告, "take this idea to a written, formatted paper". For a single piece, use the sub-skill
+  "take this idea to a written, formatted paper end to end". Drafting one piece alone (帮我写论文/综述/报告) goes to
+  research-to-paper-write, not here. For a single piece, use the sub-skill
   directly — angle/journal → research-to-paper-scope; verify references / export a library → research-to-paper-curate;
   draft or rewrite → research-to-paper-write; review/audit a draft → research-to-paper-audit; de-AI / 降AI率 →
   research-to-paper-humanize; export to LaTeX/Word/PDF → research-to-paper-build.
@@ -17,7 +18,7 @@ description: >-
 # Research-to-Paper (orchestrator)
 
 Entry point for a self-contained workflow. Nothing here calls another plugin — search, verification, review,
-writing, de-AI, and format rendering all live in this skill's seven sub-skills, so it works standalone (a
+writing, de-AI, and format rendering all live in this skill's six sub-skills, so it works standalone (a
 collaborator installs this one plugin and has everything). Find which stage the user is at, run the stages they
 need in order, and pass each stage's output into the next.
 
@@ -53,6 +54,36 @@ need in order, and pass each stage's output into the next.
 - "Review / audit this draft" / "查无据claim" → research-to-paper-audit.
 - "降AI率 / de-AI this" / "长短句" → research-to-paper-humanize.
 - "导出 LaTeX/Word/PDF" / "转成 docx" → research-to-paper-build.
+- "产物齐了吗 / 检查产物 / verify the artifacts" → `scripts/artifact_check.py`.
+- "引用对得上吗 / 引用能解析吗 / check the citations resolve" → `scripts/cite_check.py`.
 
 Each stage is independently useful, so don't force the full pipeline when the user asked for one piece. Hand off
 cleanly and tell the user what each produced before moving on.
+
+## Workspace & artifacts
+
+Run a multi-stage job inside one working directory so the *reasoning* trail is auditable, not just the final file.
+Scaffold it once at the start:
+
+```
+python scripts/new_workspace.py manuscript_workspace
+```
+
+Each stage writes its artifact into this workspace — `scope_brief.md`, `library/`, `writing_rationale_matrix.md`,
+`draft.md`, `audit_report.md`, `humanize_matrix.md`, `final/`. The full list (what each records) and the
+verification commands are in `references/artifacts.md`. Before calling a run done, check completeness and that
+every citation resolves:
+
+```
+python scripts/artifact_check.py manuscript_workspace --write   # refreshes artifact_manifest.md
+python scripts/cite_check.py manuscript_workspace/draft.md manuscript_workspace/library/library.bib
+```
+
+A polished draft with an empty rationale matrix or no audit report is an incomplete run, not a finished one.
+
+## Files
+
+- `scripts/new_workspace.py` — scaffold the `manuscript_workspace/` and seed `scope_brief.md`.
+- `scripts/artifact_check.py` — verify the artifact trail; write `artifact_manifest.md`.
+- `scripts/cite_check.py` — check draft `[@key]` / `\cite{}` citations resolve against `library.bib`.
+- `references/artifacts.md` — the workspace layout, the full artifact set, and every check command.
