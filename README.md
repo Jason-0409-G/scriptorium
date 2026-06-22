@@ -62,6 +62,90 @@ bash install.sh codex           # macOS / Linux
 
 ---
 
+## 工作模式、场景与深度
+
+- **两种入口**:**改写已有稿**(Rewrite Existing —— 在你的草稿上提升论证 / 结构 / 对冲,不降级为表面润色)或**从素材构建**(Build From Materials —— 用笔记、数据、图、PDF、部分初稿从零起草)。
+- **目标场景**:`journal` 期刊论文 · `conference` 会议论文 · `report` 报告 · `review` 综述 · `competition` 竞赛论文 / 报告(各自结构不同)。
+- **研究深度**:`flash`(3 篇场景样例 + 3 篇近期同领域 + 官方要求)或 `pro`(6 + 6)。
+- **输出语言**:`English` 或 `Chinese`(去 AI 检查按 `--lang` 匹配)。
+
+这些由 `research-to-paper-scope` 一问一确认地定下,写入 `scope_brief.md`,后续各阶段照此执行。
+
+---
+
+## 公共数据检索接口
+
+`research-to-paper-curate` 内置接入下列公共 API,**检索/读取一律免 key**(key 仅提速;唯 Zotero 直接写入需 key)。文献用 `search_papers.py` 五源合并去重,生物资源用 `bio_search.py`。
+
+- **文献**:OpenAlex、Europe PMC、PubMed、Semantic Scholar、Crossref。
+- **生物资源**:任意 **NCBI Entrez** 库(`protein` / `nucleotide` / `gene` / `taxonomy` / `genome` / `assembly` / `structure` / `sra` / `bioproject` / `biosample` …)、**UniProt**、**RCSB PDB**、**AlphaFold DB**、**Europe PMC**。
+
+| 接口 | 读取要 key? | 没 key | 有 key |
+|---|---|---|---|
+| OpenAlex / Crossref / Europe PMC | 否 | 免费(邮箱进 polite 池更快) | — |
+| NCBI Entrez(全库) | 否 | 3 次/秒 | `NCBI_API_KEY` → 10 次/秒 |
+| Semantic Scholar | 否 | 共享池(可能限速) | `S2_API_KEY` 专属限额 |
+| UniProt / RCSB PDB / AlphaFold | 否 | 完全免 key | — |
+| **Zotero 直接导入** | **要(写入)** | 回退 `.ris` 文件 | 按分类直推进库 |
+
+```bash
+python bio_search.py protein "class IIa bacteriocin" --retmax 10
+python bio_search.py uniprot "pediocin"        # → P29430 Bacteriocin pediocin PA-1
+python bio_search.py pdb "bacteriocin"         # → 1O82 / 5UKZ …
+python bio_search.py alphafold P29430          # 查询参数 = UniProt 登录号
+python bio_search.py --list                    # 列出全部接口
+```
+逐接口的 key 获取方式与速率见 `skills/research-to-paper-curate/references/bio-sources.md`。
+
+---
+
+## 工作产物(可审计轨迹)
+
+一次完整运行不只产出最终稿,而是在统一工作区留下可追溯的写作轨迹(`new_workspace.py` 脚手架,各阶段写入):
+
+```
+manuscript_workspace/
+├── scope_brief.md              # scope:方向契约(角度 / 目标期刊及要求 / 字数 / 主题)
+├── library/
+│   ├── library.ris             # curate:Zotero / EndNote 通用
+│   ├── library.bib             # curate:pandoc / LaTeX
+│   ├── library.xlsx            # curate:按主题着色(缺 openpyxl 退 .csv)
+│   └── doi_report.md           # curate:逐条 DOI 核验状态
+├── writing_rationale_matrix.md # write:逐单元写作理据(claim / 证据 / 对冲档 / 来源)
+├── draft.md                    # write:工作草稿(含 [@key] 引用)
+├── audit_report.md             # audit:三审 + 主编综合,逐轮直至无新问题
+├── humanize_matrix.md          # humanize:逐处去 AI 改动(按 D1–D5 标注)
+├── final/                      # build:main.tex / manuscript.docx / manuscript.pdf
+└── artifact_manifest.md        # 由 artifact_check.py 生成的产物索引
+```
+
+最核心的两个推理产物是 `writing_rationale_matrix.md`(逐单元解释为什么这样写)与 `audit_report.md`(独立评审查到什么、如何解决)。若产出漂亮的 `draft.md` 却空着理据矩阵,即视为未完成。完整规范见 `skills/research-to-paper/references/artifacts.md`。
+
+---
+
+## 检查命令
+
+每个检查都是纯标准库脚本(下方为仓库内路径;安装后脚本位于 `~/.claude/skills/` 或 `~/.codex/skills/` 下):
+
+```bash
+# 文献 DOI 真实且匹配(curate)
+python skills/research-to-paper-curate/scripts/verify_doi.py <papers.json> <verified.json>
+
+# 正文 [@key] / \cite 能在 library.bib 解析(write → build)
+python skills/research-to-paper/scripts/cite_check.py manuscript_workspace/draft.md manuscript_workspace/library/library.bib
+
+# 去 AI 痕迹达标(humanize;--tier light/medium/heavy)
+python skills/research-to-paper-humanize/scripts/humanize_check.py manuscript_workspace/draft.md --lang zh --tier medium
+
+# 产物轨迹完整,并刷新 manifest(orchestrator)
+python skills/research-to-paper/scripts/artifact_check.py manuscript_workspace --write
+
+# 检查脚本的单元测试
+python -m unittest discover -s tests
+```
+
+---
+
 ## 依赖
 
 除下列可选工具外,其余均为 Python **标准库**(缺失时将优雅降级或给出提示):

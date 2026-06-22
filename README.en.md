@@ -79,6 +79,90 @@ all hit the right sub-skill directly.
 
 ---
 
+## Modes, scenes & depth
+
+- **Two entry modes**: **Rewrite Existing** (strengthen your draft's argument / structure / hedging — not surface polish) or **Build From Materials** (draft from notes, data, figures, PDFs, partial drafts).
+- **Target scenes**: `journal` · `conference` · `report` · `review` · `competition` (each with its own structure).
+- **Research depth**: `flash` (3 scene exemplars + 3 recent in-field papers + the venue's requirements) or `pro` (6 + 6).
+- **Output language**: `English` or `Chinese` (the de-AI check matches with `--lang`).
+
+`research-to-paper-scope` confirms these one question at a time and records them in `scope_brief.md`; every later stage follows it.
+
+---
+
+## Public data interfaces
+
+`research-to-paper-curate` integrates the public APIs below. **Every search/lookup is key-free** (a key only raises rate limits; only the Zotero *write* import needs one). Literature goes through `search_papers.py` (five sources, merged + de-duplicated); biology resources through `bio_search.py`.
+
+- **Literature**: OpenAlex, Europe PMC, PubMed, Semantic Scholar, Crossref.
+- **Biology resources**: any **NCBI Entrez** db (`protein` / `nucleotide` / `gene` / `taxonomy` / `genome` / `assembly` / `structure` / `sra` / `bioproject` / `biosample` …), **UniProt**, **RCSB PDB**, **AlphaFold DB**, **Europe PMC**.
+
+| Interface | Key to read? | Without a key | With a key |
+|---|---|---|---|
+| OpenAlex / Crossref / Europe PMC | No | free (email → faster polite pool) | — |
+| NCBI Entrez (every db) | No | 3 req/s | `NCBI_API_KEY` → 10 req/s |
+| Semantic Scholar | No | shared pool (throttleable) | `S2_API_KEY` dedicated limit |
+| UniProt / RCSB PDB / AlphaFold | No | fully key-free | — |
+| **Zotero direct import** | **Yes — write** | falls back to a `.ris` file | pushed straight in, by category |
+
+```bash
+python bio_search.py protein "class IIa bacteriocin" --retmax 10
+python bio_search.py uniprot "pediocin"        # -> P29430 Bacteriocin pediocin PA-1
+python bio_search.py pdb "bacteriocin"         # -> 1O82 / 5UKZ ...
+python bio_search.py alphafold P29430          # query = a UniProt accession
+python bio_search.py --list                    # all interfaces
+```
+Per-interface keys and rate limits: `skills/research-to-paper-curate/references/bio-sources.md`.
+
+---
+
+## Working artifacts (the auditable trail)
+
+A full run leaves more than a final paper — it leaves a traceable writing trail in one workspace (`new_workspace.py` scaffolds it; each stage writes into it):
+
+```
+manuscript_workspace/
+├── scope_brief.md              # scope: direction contract (angle / target journal + rules / word count / themes)
+├── library/
+│   ├── library.ris             # curate: Zotero / EndNote
+│   ├── library.bib             # curate: pandoc / LaTeX
+│   ├── library.xlsx            # curate: by-category, color-coded (.csv fallback without openpyxl)
+│   └── doi_report.md           # curate: per-reference DOI status
+├── writing_rationale_matrix.md # write: per-unit rationale (claim / evidence / hedge tier / source)
+├── draft.md                    # write: the working manuscript (with [@key] citations)
+├── audit_report.md             # audit: three reviewers + Editor Synthesis, round by round until clean
+├── humanize_matrix.md          # humanize: every de-AI change (tagged D1–D5)
+├── final/                      # build: main.tex / manuscript.docx / manuscript.pdf
+└── artifact_manifest.md        # index written by artifact_check.py
+```
+
+The two artifacts that carry the most reasoning are `writing_rationale_matrix.md` (why the manuscript is shaped as it is) and `audit_report.md` (what independent review found and how it was resolved). A polished `draft.md` with an empty rationale matrix counts as incomplete. Full spec: `skills/research-to-paper/references/artifacts.md`.
+
+---
+
+## Check commands
+
+Each check is a standard-library script (repo-relative paths below; once installed they live under `~/.claude/skills/` or `~/.codex/skills/`):
+
+```bash
+# reference DOIs are real and matched (curate)
+python skills/research-to-paper-curate/scripts/verify_doi.py <papers.json> <verified.json>
+
+# the draft's [@key] / \cite resolve against library.bib (write -> build)
+python skills/research-to-paper/scripts/cite_check.py manuscript_workspace/draft.md manuscript_workspace/library/library.bib
+
+# de-AI signature is within range (humanize; --tier light/medium/heavy)
+python skills/research-to-paper-humanize/scripts/humanize_check.py manuscript_workspace/draft.md --lang en --tier medium
+
+# the artifact trail is complete, and refresh the manifest (orchestrator)
+python skills/research-to-paper/scripts/artifact_check.py manuscript_workspace --write
+
+# unit tests for the check scripts
+python -m unittest discover -s tests
+```
+
+---
+
 ## Dependencies
 
 Everything is Python **stdlib** except these optional tools (each step degrades gracefully or tells you what to

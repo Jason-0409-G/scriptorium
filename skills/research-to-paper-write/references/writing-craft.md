@@ -53,6 +53,14 @@ vs contested. Close on the open questions that motivate future work.
 **报告 / report.** Problem → approach → findings → implications. Plainer register for a non-specialist or internal
 reader; lead with the takeaway, support with evidence, keep methods brief but reproducible.
 
+**会议论文 / conference.** A tighter journal paper under a hard page/length limit: state the contribution in the
+abstract and the first paragraph, compress Related Work and Methods to what is needed to reproduce the core result,
+and foreground the one or two results that carry the claim. Cut, don't shrink uniformly — keep the contribution sharp.
+
+**竞赛 / competition.** Judged against the competition's rubric, so map the writing to its scoring axes (novelty,
+results, impact, clarity). Lead with the problem and the contribution, make the results and their significance
+unmissable, and state limitations honestly — a hedged, defensible claim scores better than an over-claim.
+
 ---
 
 After drafting, run the review (`research-to-paper-audit`) until a round is clean, then the de-AI pass

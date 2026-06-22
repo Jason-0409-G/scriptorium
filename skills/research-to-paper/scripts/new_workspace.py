@@ -12,11 +12,15 @@ import os
 SCOPE_TEMPLATE = """\
 # Scope brief: <short title>
 
+Entry mode: <Rewrite Existing | Build From Materials>
+Target scene: <journal | conference | report | review | competition>
 Research question / angle: <the specific question or claim, not the broad topic>
 Scope — in: <what's included>   out: <what's explicitly excluded>
-Target journal: <name>
+Target journal / venue: <name>
   Article type: <...>   Length limit: <...>   Structure: <...>   Citation style: <...>   Scope fit: <...>
+Research depth: <flash | pro>
 Target word count: <...>
+Output language: <English | Chinese>
 Core themes (-> literature categories):
   1) <...>
   2) <...>

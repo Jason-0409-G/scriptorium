@@ -1,13 +1,16 @@
 ---
 name: research-to-paper-write
 description: >-
-  Draft and revise a 综述 (review) / 报告 (report) / 论文 (paper) end to end. It understands the content first,
+  Draft and revise an academic manuscript end to end in either of two modes — Build From Materials or Rewrite
+  Existing — across scenes journal/论文, conference/会议论文, report/报告, review/综述, competition/竞赛, at a flash or
+  pro research depth, in English or Chinese. It understands the content first,
   plans a per-unit writing rationale (not a generic IMRaD template), and drafts with evidence-matched hedging,
   then runs the review and de-AI passes through its companion sub-skills research-to-paper-audit (independent
   multi-reviewer rounds) and research-to-paper-humanize (five-dimension de-AI incl. 长短句), discussing with the
   user at each round. Depends on no skill outside this plugin. Use whenever the user wants to write or rewrite a
   paper, review, or report, says 帮我写论文/综述/报告, 把这些内容写成稿子, 改写这篇草稿, 按我的写作纪律来,
-  "draft this into a paper", "rewrite this manuscript", "write up these results". Reads an optional scope_brief.md
+  写会议论文/竞赛论文, 从素材构建, "draft this into a paper", "build a paper from these materials", "rewrite this
+  manuscript", "write up these results". Reads an optional scope_brief.md
   (angle/journal/word-count) and a curated reference library if present; works standalone otherwise. For ONLY a
   review pass use research-to-paper-audit; for ONLY de-AI use research-to-paper-humanize.
 ---
@@ -23,11 +26,25 @@ The discipline rests on one idea: **good academic writing is a checklist applied
 loop.** Never draft before understanding, never finish after one pass, never hand over prose that still reads as
 machine-generated. This is adversarial collaboration, not one-shot generation.
 
+## Two entry modes
+
+The engine starts from one of two places — name which at the outset:
+
+- **Rewrite Existing** — the user brings an existing paper/report/draft. Understand it, then strengthen it through
+  the audit (argument, hedging, structure, citations). Do NOT downgrade the task to surface polish — the audit
+  explicitly rejects shallow/append-only edits.
+- **Build From Materials** — the user brings a materials folder (notes, data/results, figures, PDFs, partial drafts,
+  experiment descriptions). Understand the materials, plan the rationale matrix, and draft from scratch.
+
+Both modes then run the same Workflow below (understand → rationale → draft → audit → de-AI → build).
+
 ## Workflow (run every time, in order)
 
 1. **Understand first — do not draft yet.**
    Read the user's materials: their data/results, any draft, the `scope_brief.md` (angle, target journal + limits,
-   word count, themes) and the curated reference library if they exist. Restate, in your own words, the single core
+   word count, themes) and the curated reference library if they exist. Note the **entry mode** (Rewrite Existing vs
+   Build From Materials) and read the **scene**, **research depth**, and **output language** from the `scope_brief.md`.
+   Restate, in your own words, the single core
    argument and the 3-5 supporting claims, and confirm them with the user. A beautiful paragraph built on the wrong
    claim is wasted; if you cannot restate the argument crisply, read more or ask before continuing.
 
@@ -61,15 +78,22 @@ machine-generated. This is adversarial collaboration, not one-shot generation.
 7. **Render to output formats.** Once the user approves the final draft, hand it to **`research-to-paper-build`** to
    produce LaTeX (`.tex`), Word (`.docx`), and optionally PDF, resolving citations from the `library.bib`.
 
-## Three versions
+## Target scenes
 
-The same engine produces three scenes; the structure differs (details in `references/writing-craft.md`):
+The same engine produces several scenes; the structure differs (details in `references/writing-craft.md`). Pick the
+scene from the user or the `scope_brief.md`, and apply that venue's length and structure limits:
 
-- **综述 / review** — argument-driven synthesis organized by theme, not by paper; each section advances a position.
-- **报告 / report** — problem → approach → findings → implications; plainer, audience-facing register.
-- **论文 / paper** — IMRaD with strict Results-vs-Discussion separation, structured abstract, reproducible Methods.
+- **`journal` / 论文** — IMRaD with strict Results-vs-Discussion separation, structured abstract, reproducible Methods.
+- **`conference` / 会议论文** — tighter and page/length-limited; the contribution stated up front, a condensed Methods.
+- **`report` / 报告** — problem → approach → findings → implications; plainer, audience-facing register.
+- **`review` / 综述** — argument-driven synthesis organized by theme, not by paper; each section advances a position.
+- **`competition` / 竞赛** — the novel contribution, results, and impact foregrounded against the competition's rubric.
 
-Pick the scene from the user or the `scope_brief.md`, and apply that journal's length and structure limits.
+Two more knobs come from the `scope_brief.md`:
+
+- **Research depth** — `flash` (3 scene exemplars + 3 recent in-field papers + the venue's requirements) or `pro`
+  (6 + 6); deeper orientation reading and exemplar learning at `pro`.
+- **Output language** — `English` or `Chinese`; draft in it, and run `humanize_check.py --lang` to match.
 
 ## Files
 
