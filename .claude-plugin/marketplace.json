@@ -1,6 +1,6 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "research-to-paper",
+  "name": "scriptorium",
   "description": "Personal research-and-writing skills.",
   "owner": {
     "name": "Jason-0409-G"

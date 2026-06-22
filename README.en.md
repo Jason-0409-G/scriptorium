@@ -37,7 +37,7 @@ Works in **Claude Code** and **Codex**.
 
 ```
 /plugin marketplace add Jason-0409-G/research-to-paper
-/plugin install research-to-paper@research-to-paper
+/plugin install research-to-paper@scriptorium
 /reload-plugins
 ```
 
@@ -71,7 +71,7 @@ the git commit SHA). To update an installed copy to the latest:
 
 **If installed from the marketplace**
 ```
-/plugin marketplace update research-to-paper
+/plugin marketplace update scriptorium
 /reload-plugins
 ```
 `marketplace update` fetches the latest and updates installed plugins; `/reload-plugins` applies it in the current

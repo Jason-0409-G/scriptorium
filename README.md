@@ -22,7 +22,7 @@
 
 ```
 /plugin marketplace add Jason-0409-G/research-to-paper
-/plugin install research-to-paper@research-to-paper
+/plugin install research-to-paper@scriptorium
 /reload-plugins
 ```
 
@@ -54,7 +54,7 @@ bash install.sh codex           # macOS / Linux
 
 **插件市场装的**
 ```
-/plugin marketplace update research-to-paper
+/plugin marketplace update scriptorium
 /reload-plugins
 ```
 `marketplace update` 拉取最新并更新已装插件;`/reload-plugins` 让本会话立即生效,或重启 Claude Code 亦可。
