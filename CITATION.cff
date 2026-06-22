@@ -9,8 +9,9 @@ abstract: >-
   de-AI the prose, and render LaTeX / Word / PDF — depending on no other skill.
 type: software
 authors:
-  # TODO: replace with your real name, e.g.  - family-names: <Last>  /  given-names: <First>  (+ orcid:)
-  - name: "Jason-0409-G"
+  - family-names: Gao
+    given-names: Jian
+    alias: Jason-0409-G
 repository-code: "https://github.com/Jason-0409-G/research-to-paper"
 url: "https://github.com/Jason-0409-G/research-to-paper"
 license: MIT
