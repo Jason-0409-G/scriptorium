@@ -3,7 +3,7 @@ name: research-to-paper-write
 description: >-
   Draft and revise an academic manuscript end to end in either of two modes — Build From Materials or Rewrite
   Existing — across scenes journal/论文, conference/会议论文, report/报告, review/综述, competition/竞赛, at a flash or
-  pro research depth, in English or Chinese. It understands the content first,
+  pro research depth. It understands the content first,
   plans a per-unit writing rationale (not a generic IMRaD template), and drafts with evidence-matched hedging,
   then runs the review and de-AI passes through its companion sub-skills research-to-paper-audit (independent
   multi-reviewer rounds) and research-to-paper-humanize (five-dimension de-AI incl. 长短句), discussing with the
@@ -62,9 +62,9 @@ Both modes then run the same Workflow below (understand → rationale → draft 
 
 4. **Review — hand to `research-to-paper-audit`.**
    Do not self-approve. Run the audit sub-skill: three independent reviewers (claim-support, logic, citation
-   integrity) plus Editor Synthesis, re-run until a round is clean. Pass the scene (综述/报告/论文, chosen from the
-   user or the `scope_brief.md` per "Three versions") to the audit so reviewers apply scene-appropriate structural
-   criteria. Apply its fixes before moving on.
+   integrity) plus Editor Synthesis, re-run until a round is clean. Pass the scene (journal/conference/report/review/
+   competition, from the user or the `scope_brief.md` per "Target scenes") to the audit so reviewers apply
+   scene-appropriate structural criteria. Apply its fixes before moving on.
 
 5. **De-AI — hand to `research-to-paper-humanize`.**
    Run the humanize sub-skill on the reviewed draft: the five-dimension pass (长短句 / paragraph variety / density /

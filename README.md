@@ -53,7 +53,7 @@ bash install.sh codex           # macOS / Linux
 | **research-to-paper** | 主编排。识别当前所处环节,按需将请求导入 **确定方向 → 建库 → 写作 → 排版**,各环节均可独立调用。 |
 | **research-to-paper-scope** | **确定方向**。先检索权威文献以厘清领域脉络,再以逐项确认的方式依次定下:切入角度 / 研究问题 → 范围 → **目标期刊** → **篇幅字数** → 核心子主题;目标期刊一经确定,即**联网查询该刊投稿要求**(收录范围、文章类型、篇幅、结构、引用格式)。产出 `scope_brief.md`。 |
 | **research-to-paper-curate** | **建立文献库 + 资源检索**。五源文献检索(OpenAlex / Europe PMC / PubMed / Semantic Scholar / Crossref)→ 逐篇经 **CrossRef 核验 DOI**(可识别"能够解析但指向错误文献"的情形并找回正确 DOI)→ **多 agent 对抗审查**,剔除伪造与错误归属的条目 → **配置了 Zotero API 即按分类直接导入**,否则导出 **RIS(Zotero/EndNote 通用)+ BibTeX + 按主题着色的 Excel**。另可检索生物**资源**库:任意 NCBI Entrez 库(蛋白 / 核酸 / 基因 / 物种 / 组装 / 结构 / SRA …)+ UniProt / RCSB PDB / AlphaFold / Europe PMC。 |
-| **research-to-paper-write** | **写作**。先理解内容、复述核心论点并与用户确认 → 列**逐单元 rationale 矩阵**(不套用固定 IMRaD 模板)→ 按**证据对冲**原则起草(模型 / 基因层面仅作 predict、整体实测方可 confirm);并编排后续审稿与去 AI 环节。提供三个版本:综述 / 报告 / 论文。 |
+| **research-to-paper-write** | **写作**。先理解内容、复述核心论点并与用户确认 → 列**逐单元 rationale 矩阵**(不套用固定 IMRaD 模板)→ 按**证据对冲**原则起草(模型 / 基因层面仅作 predict、整体实测方可 confirm);并编排后续审稿与去 AI 环节。覆盖五种场景:期刊论文 / 会议论文 / 报告 / 综述 / 竞赛。 |
 | **research-to-paper-audit** | **多轮对抗审稿**。调度 **3 个相互独立的审稿 agent**(claim 支撑 / 逻辑结构 / 引用证据)与主编综合,**循环审至一轮无新问题为止**;重点检出过度声称、缺乏依据的 claim、结果区混入解读、改动流于表面、引用无法支撑其所在句等问题。可单独调用("审阅这篇草稿")。 |
 | **research-to-paper-humanize** | **降低 AI 痕迹**。沿**五个维度**改写:**D1 句长(长短句结合)**、D2 段落结构变化、D3 信息密度起伏、D4 连接词控制(删除"首先 / 其次 / 此外 / 值得注意的是"等)、D5 术语表述变体;分 light / medium / heavy 三档,每处改动登记入 `humanize_matrix.md`,再以 `humanize_check.py` 作**量化校验**。可单独调用("降低这段文字的 AI 痕迹")。 |
 | **research-to-paper-build** | **输出格式**。以 pandoc 将定稿渲染为 **LaTeX(.tex)/ Word(.docx)/ PDF**,并依据 `library.bib` 将 `[@key]` 引用解析为参考文献表。 |
@@ -109,8 +109,7 @@ manuscript_workspace/
 ├── library/
 │   ├── library.ris             # curate:Zotero / EndNote 通用
 │   ├── library.bib             # curate:pandoc / LaTeX
-│   ├── library.xlsx            # curate:按主题着色(缺 openpyxl 退 .csv)
-│   └── doi_report.md           # curate:逐条 DOI 核验状态
+│   └── library.xlsx            # curate:按主题着色(缺 openpyxl 退 .csv)
 ├── writing_rationale_matrix.md # write:逐单元写作理据(claim / 证据 / 对冲档 / 来源)
 ├── draft.md                    # write:工作草稿(含 [@key] 引用)
 ├── audit_report.md             # audit:三审 + 主编综合,逐轮直至无新问题

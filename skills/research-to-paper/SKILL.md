@@ -39,7 +39,7 @@ need in order, and pass each stage's output into the next.
    **`research-to-paper-audit`** (independent multi-reviewer rounds) and **`research-to-paper-humanize`**
    (five-dimension de-AI incl. 长短句). Understands the content first, plans a per-unit rationale, drafts with
    evidence-matched hedging, then audits until clean and de-AIs — discussing with the user each round. Scenes:
-   `review` (综述) / `report` (报告) / `journal` (论文).
+   `journal` (论文) / `conference` (会议论文) / `report` (报告) / `review` (综述) / `competition` (竞赛).
 
 4. **BUILD — render to formats** → **`research-to-paper-build`**.
    Turns the approved manuscript into LaTeX (`.tex`), Word (`.docx`), and optionally PDF via pandoc, resolving

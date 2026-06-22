@@ -22,7 +22,6 @@ When the skills are installed under `~/.claude/skills/` (or `~/.codex/skills/`),
 | `library/library.ris` | curate | Reference library for Zotero/EndNote (single-file import). |
 | `library/library.bib` | curate | BibTeX for pandoc/LaTeX citation resolution. |
 | `library/library.xlsx` (or `.csv`) | curate | By-category, color-coded library for the human to prune. |
-| `library/doi_report.md` | curate | Per-reference DOI verification status and any corrected DOIs. |
 | `writing_rationale_matrix.md` | write | Per-unit reasoning: claim, evidence, rhetorical move, hedge level, source. |
 | `draft.md` | write | The working manuscript, with `[@key]` citation markers. |
 | `audit_report.md` | audit | The three independent reviews + Editor Synthesis, one block per round, until clean. |

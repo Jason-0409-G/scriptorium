@@ -22,7 +22,7 @@ Usage:
   python bio_search.py entrez-dbs                        # live list of every NCBI database
 """
 from __future__ import annotations
-import sys, os, json, time, argparse, urllib.request, urllib.parse, urllib.error
+import sys, os, json, re, time, argparse, urllib.request, urllib.parse, urllib.error
 
 try:                                    # optional: load API creds from a .env-style file
     from _env import load_env; load_env()
@@ -50,6 +50,10 @@ def _get(url, headers=None, raw=False, tries=3):
             with urllib.request.urlopen(urllib.request.Request(url, headers=h), timeout=TIMEOUT) as r:
                 data = r.read().decode("utf-8", "replace")
             return data if raw else json.loads(data)
+        except urllib.error.HTTPError as e:
+            if 400 <= e.code < 500 and e.code != 429:   # permanent client error — don't retry
+                return None
+            time.sleep(2 ** i)
         except Exception:
             time.sleep(2 ** i)
     return None
@@ -74,6 +78,11 @@ def _summ_label(d):
     for f in _LABEL_FIELDS:
         v = d.get(f)
         if isinstance(v, str) and v.strip():
+            if v.lstrip().startswith("<"):           # e.g. SRA 'expxml' is an XML blob, not a label
+                m = re.search(r"<Title[^>]*>([^<]+)", v)
+                if m:
+                    return m.group(1).strip()
+                continue                             # no <Title> → skip raw markup, try next field
             return v.strip()
         if isinstance(v, dict):                      # e.g. gene 'organism': {'scientificname': ...}
             for k in ("scientificname", "ScientificName", "name"):
@@ -228,7 +237,8 @@ def main():
         text = entrez_fetch(a.db, a.query, rettype=a.fetch, retmax=a.retmax)
         print(f"[bio] {a.db} efetch {a.fetch}: {len(text)} chars")
         if a.out:
-            open(a.out, "w", encoding="utf-8").write(text)
+            with open(a.out, "w", encoding="utf-8") as fh:
+                fh.write(text)
             print(f"[bio] 写出 → {a.out}")
         elif text:
             print(text[:1500])
@@ -239,7 +249,8 @@ def main():
     for r in recs[:10]:
         print(f"  · {r.get('id',''):<16} {r.get('label','')[:80]}")
     if a.out:
-        json.dump(recs, open(a.out, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+        with open(a.out, "w", encoding="utf-8") as fh:
+            json.dump(recs, fh, ensure_ascii=False, indent=2)
         print(f"[bio] 写出 → {a.out}")
     return 0
 

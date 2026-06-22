@@ -19,7 +19,6 @@ EXPECTED = [
     ("library/library.ris", "curate", "trail"),
     ("library/library.bib", "curate", "trail"),
     ("library/library.xlsx|library/library.csv", "curate", "trail"),
-    ("library/doi_report.md", "curate", "optional"),
     ("writing_rationale_matrix.md", "write", "trail"),
     ("draft.md", "write", "trail"),
     ("audit_report.md", "audit", "trail"),

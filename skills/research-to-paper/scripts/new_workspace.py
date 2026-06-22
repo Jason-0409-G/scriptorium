@@ -35,7 +35,7 @@ README_TEMPLATE = """\
 The auditable trail of one research-to-paper run. Each file is produced by a stage:
 
 - `scope_brief.md` — scope: the direction contract (angle / target journal + requirements / word count / themes)
-- `library/` — curate: `library.ris` (Zotero/EndNote), `library.bib`, `library.xlsx`, `doi_report.md`
+- `library/` — curate: `library.ris` (Zotero/EndNote), `library.bib`, `library.xlsx`
 - `writing_rationale_matrix.md` — write: per-unit writing rationale
 - `draft.md` — write: the working manuscript (with `[@key]` citations)
 - `audit_report.md` — audit: three independent reviews + Editor Synthesis, round by round until clean

@@ -84,8 +84,16 @@ def ensure_collections(base, key, categories):
     """Return {category: collectionKey}, creating any that don't already exist."""
     existing = {}
     try:
-        for c in _req("GET", f"{base}/collections?limit=100", key):
-            existing[c["data"]["name"]] = c["key"]
+        start = 0
+        while True:                                   # paginate: Zotero caps at 100 per page
+            page = _req("GET", f"{base}/collections?limit=100&start={start}", key)
+            if not page:
+                break
+            for c in page:
+                existing[c["data"]["name"]] = c["key"]
+            if len(page) < 100:
+                break
+            start += 100
     except urllib.error.HTTPError:
         pass
     mapping, to_create = {}, []
@@ -132,7 +140,16 @@ def main():
         print("[zotero] → 改用 export_refs.py 生成 library.ris 供手动导入", file=sys.stderr)
         return 3
     records = json.load(open(a.verified, encoding="utf-8"))
-    res = push(records, dry_run=a.dry_run)
+    try:
+        res = push(records, dry_run=a.dry_run)
+    except urllib.error.HTTPError as e:
+        # key 无写权限 / 载荷被拒等 → 不崩溃,退回文件导入(调用方改跑 export_refs.py)
+        print(f"[zotero] 写入失败 (HTTP {e.code}) — 多半是 key 无写权限或载荷被拒", file=sys.stderr)
+        print("[zotero] → 改用 export_refs.py 生成 library.ris 供手动导入", file=sys.stderr)
+        return 3
+    except urllib.error.URLError as e:
+        print(f"[zotero] 网络错误: {e.reason} → 改用 export_refs.py", file=sys.stderr)
+        return 3
     if a.dry_run:
         print(f"[zotero] dry-run: {res['items']} 条 · 分类 {res['categories']}")
     else:

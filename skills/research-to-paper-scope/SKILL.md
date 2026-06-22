@@ -5,8 +5,8 @@ description: >-
   discussing with the user one question at a time. Given a broad topic, it reads a few authoritative sources
   (recent high-impact reviews + seminal works), then proposes 2-3 concrete angles with trade-offs, and locks the
   entry mode (build-from-materials vs rewrite), angle, scope, target scene (journal/conference/report/review/
-  competition), target journal, research depth (flash/pro), word count, output language, and core themes through
-  step-by-step confirmation.
+  competition), target journal, research depth (flash/pro), word count, output language (中文/English), and core
+  themes through step-by-step confirmation.
   Once the target journal is set, it looks up that journal's author requirements online. Use whenever the user
   says 帮我定研究方向, 我有个大方向想缩成题目, 这个综述/论文该从哪个角度写, 帮我选切入点, 我想投X期刊先确定方向和要求,
   "help me scope this", "narrow my topic", "what angle should I take", "figure out the direction before I start".

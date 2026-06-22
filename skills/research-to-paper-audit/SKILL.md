@@ -24,8 +24,8 @@ before a journal does.
 ## Workflow
 
 1. **Dispatch three independent reviewers in parallel.** Spawn three Agent calls at once, each given ONLY its own
-   prompt (from `references/audit-prompts.md`), the draft, AND the scene (综述/报告/论文) so structural checks apply
-   to the right form — independence is the whole point, so do not let one reviewer see another's output or a shared
+   prompt (from `references/audit-prompts.md`), the draft, AND the scene (journal/conference/report/review/
+   competition) so structural checks apply to the right form — independence is the whole point, so do not let one reviewer see another's output or a shared
    summary. The three lenses are deliberately different:
    - **Reviewer 1 — claim support:** is every claim backed by its cited evidence at the stated strength? Are
      hedges matched to the evidence (a prediction stays "predicted"; only a measured whole-system result may
