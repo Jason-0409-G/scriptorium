@@ -92,28 +92,31 @@ claude
 ### 情况一:有代理(能访问 anthropic.com / claude.ai)
 - 直接按提示在浏览器登录 Claude 订阅(Pro/Max)或填 Anthropic Console 的 API Key 即可。会话内重新登录用 `/login`。
 
-### 情况二:无代理 —— 改用国内可达的 Anthropic 兼容端点(如 DeepSeek)
-Claude Code 支持把后端指向**任意 Anthropic-API 兼容的端点**,通过环境变量设置。以 **DeepSeek** 为例(它提供 Anthropic 兼容接口):
+### 情况二:不登录 Claude 会员 —— 用 DeepSeek(国内可直连,推荐)
 
-PowerShell 里**当前会话**临时设置:
-```powershell
-$env:ANTHROPIC_BASE_URL  = "https://api.deepseek.com/anthropic"
-$env:ANTHROPIC_AUTH_TOKEN = "你的 DeepSeek API Key"
-$env:ANTHROPIC_MODEL     = "deepseek-chat"   # 或 deepseek-reasoner
-claude
+Claude Code 支持把后端指向**任意 Anthropic-API 兼容端点**;**设了端点和 token 就不走 Claude 登录、也不需要 Claude 会员**(官方鉴权优先级里 token 排在浏览器登录之前)。最稳的做法是写进 `~/.claude/settings.json`,并顺手关掉首次运行的引导。
+
+用记事本新建 / 编辑 `C:\Users\你的用户名\.claude\settings.json`,填入:
+```json
+{
+  "hasCompletedOnboarding": true,
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://api.deepseek.com/anthropic",
+    "ANTHROPIC_AUTH_TOKEN": "在这里填你的 DeepSeek API Key",
+    "ANTHROPIC_MODEL": "deepseek-v4-pro",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "deepseek-v4-flash"
+  }
+}
 ```
+保存后直接运行 `claude` —— **不弹登录、直接用 DeepSeek**。
 
-想**永久生效**(每次开终端都带上):
-```powershell
-setx ANTHROPIC_BASE_URL  "https://api.deepseek.com/anthropic"
-setx ANTHROPIC_AUTH_TOKEN "你的 DeepSeek API Key"
-setx ANTHROPIC_MODEL     "deepseek-chat"
-```
-设完 `setx` 要**重开终端**才生效。
+要点:
+- **token 用 `ANTHROPIC_AUTH_TOKEN`**(Bearer 方案),不是 `ANTHROPIC_API_KEY`。
+- **`hasCompletedOnboarding: true` 很关键**:不设的话,首次 `claude` 可能仍弹出引导/登录;设了才直达。
+- `ANTHROPIC_MODEL` 是主模型,`ANTHROPIC_DEFAULT_HAIKU_MODEL` 是 Claude Code 内部用的后台小模型;两个都设,行为更可控。
+- ⚠️ **base URL 和模型名以 [DeepSeek 官方 Claude Code 接入文档](https://api-docs.deepseek.com/quick_start/agent_integrations/claude_code) 为准**——模型名随版本变(本文写作时大致是 `deepseek-v4-pro` / `deepseek-v4-flash`)。其它国内中转服务同理,把 base URL + token 换成它给的即可。
 
-> ⚠️ **请以 DeepSeek 官方文档为准**:上面的 base URL、模型名、鉴权变量名可能随 DeepSeek 更新而变化,设置前查一下它最新的"Anthropic API / Claude Code 接入"说明。其它提供国内中转的 Anthropic 兼容服务同理——把 `ANTHROPIC_BASE_URL` 和 `ANTHROPIC_AUTH_TOKEN` 换成它给的值即可。
->
-> 用 DeepSeek 等第三方模型时:**安装本 skill、跑里面的 Python 脚本完全一样**;但"自动触发 skill、多轮对抗审稿、去 AI 判断"这些靠模型理解的环节,效果取决于该模型本身,必要时更明确地点名让它"读并执行某个 SKILL.md"。
+> 用 DeepSeek 等第三方模型时:**装 skill、跑里面的 Python 脚本完全一样**;但"自动触发、多轮对抗审稿、去 AI 判断"这些靠模型理解的环节,效果取决于该模型本身,必要时更明确地点名"读并执行某个 SKILL.md"。
 
 ---
 

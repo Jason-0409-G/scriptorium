@@ -18,8 +18,9 @@
 # ===================== 只需改这一行 =====================
 $DeepSeekApiKey = ""                              # ← 填你的 DeepSeek API Key;留空则走 Anthropic 官方登录
 # ===================== 可选项(一般不用动) ==============
-$Model   = "deepseek-chat"                        # deepseek-chat 通用 / deepseek-reasoner 偏推理
-$BaseUrl = "https://api.deepseek.com/anthropic"   # DeepSeek 的 Anthropic 兼容端点,以其官方文档为准
+$Model      = "deepseek-v4-pro"                    # 主模型;以 DeepSeek 官方接入文档为准(模型名会随版本变)
+$HaikuModel = "deepseek-v4-flash"                  # 后台小模型;同上,以官方文档为准
+$BaseUrl    = "https://api.deepseek.com/anthropic" # DeepSeek 的 Anthropic 兼容端点,以其官方文档为准
 # =======================================================
 
 $ErrorActionPreference = "Stop"
@@ -76,16 +77,29 @@ if (-not (Test-Path $installer)) { Die "解压后未找到 install.ps1,仓库结
 Ok "7 个 skill 已安装到 $HOME\.claude\skills\"
 Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
 
-# 4) (可选)配置 DeepSeek 后端
+# 4) (可选)配置 DeepSeek 后端 —— 写入 ~/.claude/settings.json,免 Claude 登录
 if (-not [string]::IsNullOrWhiteSpace($DeepSeekApiKey)) {
-  Info "配置 DeepSeek 后端 ..."
-  setx ANTHROPIC_BASE_URL   $BaseUrl         | Out-Null
-  setx ANTHROPIC_AUTH_TOKEN $DeepSeekApiKey  | Out-Null
-  setx ANTHROPIC_MODEL      $Model           | Out-Null
-  $env:ANTHROPIC_BASE_URL = $BaseUrl
-  $env:ANTHROPIC_AUTH_TOKEN = $DeepSeekApiKey
-  $env:ANTHROPIC_MODEL = $Model
-  Ok "DeepSeek 已配置(base=$BaseUrl · model=$Model)"
+  Info "配置 DeepSeek 后端(免 Claude 登录)..."
+  $claudeDir = Join-Path $HOME ".claude"
+  New-Item -ItemType Directory -Force -Path $claudeDir | Out-Null
+  $settingsPath = Join-Path $claudeDir "settings.json"
+  $block = [ordered]@{
+    hasCompletedOnboarding = $true        # 关键:不设的话首次 claude 仍可能弹登录/引导
+    env = [ordered]@{
+      ANTHROPIC_BASE_URL            = $BaseUrl
+      ANTHROPIC_AUTH_TOKEN          = $DeepSeekApiKey   # DeepSeek 用 AUTH_TOKEN(Bearer),不是 API_KEY
+      ANTHROPIC_MODEL               = $Model
+      ANTHROPIC_DEFAULT_HAIKU_MODEL = $HaikuModel
+    }
+  }
+  if (Test-Path $settingsPath) {
+    Copy-Item $settingsPath "$settingsPath.bak" -Force
+    Info "已存在 settings.json(备份为 settings.json.bak)。为不覆盖你的其它设置,请手动把下面这段并进 env 里:"
+    ($block | ConvertTo-Json -Depth 10) | Write-Host
+  } else {
+    ($block | ConvertTo-Json -Depth 10) | Set-Content -Path $settingsPath -Encoding UTF8
+    Ok "DeepSeek 已写入 $settingsPath(base=$BaseUrl · model=$Model · 免登录直用)"
+  }
 } else {
   Info "未填 DeepSeek Key → 跳过后端配置,首次运行 claude 会走 Anthropic 官方登录(需能访问 claude.ai,国内可能要代理)。"
 }
