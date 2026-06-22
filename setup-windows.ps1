@@ -18,7 +18,7 @@
 # ===================== 只需改这一行 =====================
 $DeepSeekApiKey = ""                              # ← 填你的 DeepSeek API Key;留空则走 Anthropic 官方登录
 # ===================== 可选项(一般不用动) ==============
-$Model      = "deepseek-v4-pro"                    # 主模型;以 DeepSeek 官方接入文档为准(模型名会随版本变)
+$Model      = "deepseek-v4-pro[1m]"                # 主模型(官方含 [1m] 后缀);以 DeepSeek 官方接入文档为准
 $HaikuModel = "deepseek-v4-flash"                  # 后台小模型;同上,以官方文档为准
 $BaseUrl    = "https://api.deepseek.com/anthropic" # DeepSeek 的 Anthropic 兼容端点,以其官方文档为准
 # =======================================================
@@ -86,10 +86,14 @@ if (-not [string]::IsNullOrWhiteSpace($DeepSeekApiKey)) {
   $block = [ordered]@{
     hasCompletedOnboarding = $true        # 关键:不设的话首次 claude 仍可能弹登录/引导
     env = [ordered]@{
-      ANTHROPIC_BASE_URL            = $BaseUrl
-      ANTHROPIC_AUTH_TOKEN          = $DeepSeekApiKey   # DeepSeek 用 AUTH_TOKEN(Bearer),不是 API_KEY
-      ANTHROPIC_MODEL               = $Model
-      ANTHROPIC_DEFAULT_HAIKU_MODEL = $HaikuModel
+      ANTHROPIC_BASE_URL             = $BaseUrl
+      ANTHROPIC_AUTH_TOKEN           = $DeepSeekApiKey   # DeepSeek 用 AUTH_TOKEN(Bearer),不是 API_KEY
+      ANTHROPIC_MODEL                = $Model
+      ANTHROPIC_DEFAULT_OPUS_MODEL   = $Model
+      ANTHROPIC_DEFAULT_SONNET_MODEL = $Model
+      ANTHROPIC_DEFAULT_HAIKU_MODEL  = $HaikuModel
+      CLAUDE_CODE_SUBAGENT_MODEL     = $HaikuModel
+      CLAUDE_CODE_EFFORT_LEVEL       = "max"
     }
   }
   if (Test-Path $settingsPath) {
