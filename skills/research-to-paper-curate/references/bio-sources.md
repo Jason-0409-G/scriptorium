@@ -83,3 +83,20 @@ Copy `.env.example` to one of those and fill in what you have. Nothing here requ
 
 EndNote exposes no public item-creation API, so there is no direct-push for it — `export_refs.py` writes a `.ris`
 that EndNote imports natively (File → Import).
+
+## Bring your own key — never commit one
+
+API keys are **personal credentials tied to your account**; never paste one into the repo or any committed file.
+A key pushed to a public repo is scraped within minutes, auto-revoked by GitHub secret-scanning or the provider,
+and — if it were shared — throttled or banned because everyone would hammer it at once (the exact shared-pool
+problem a key is meant to avoid). The whole `.env` design exists to keep keys **out of version control**:
+
+- The skill works with **no key at all** — four key-free literature sources (OpenAlex, Crossref, Europe PMC, and
+  NCBI's no-key tier) plus every key-free resource source (UniProt, RCSB PDB, AlphaFold) cover a query even when
+  Semantic Scholar's shared pool is throttling and returns 0.
+- Each user supplies **their own free key** in a local, gitignored `.env` — never a shared one.
+- A Semantic Scholar key takes ~2 minutes: request it at <https://www.semanticscholar.org/product/api>, then put it
+  in `.env` as `S2_API_KEY=...`. Same idea for `NCBI_API_KEY`.
+
+For zero-setup "just works" behaviour, lean on the always-key-free sources and treat the S2 / NCBI keys as an
+optional speed-up, not a requirement.
