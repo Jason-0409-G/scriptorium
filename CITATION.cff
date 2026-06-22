@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: research-to-paper
+abstract: >-
+  A fully self-contained Claude Code / Codex skill that takes a research idea to a
+  submission-ready manuscript: scope the direction, build a DOI-verified literature
+  library (with biology resource search across NCBI / UniProt / RCSB PDB / AlphaFold /
+  Europe PMC), draft with evidence-matched hedging, run multi-agent adversarial review,
+  de-AI the prose, and render LaTeX / Word / PDF — depending on no other skill.
+type: software
+authors:
+  # TODO: replace with your real name, e.g.  - family-names: <Last>  /  given-names: <First>  (+ orcid:)
+  - name: "Jason-0409-G"
+repository-code: "https://github.com/Jason-0409-G/research-to-paper"
+url: "https://github.com/Jason-0409-G/research-to-paper"
+license: MIT
+version: 0.1.0
+date-released: "2026-06-22"
+keywords:
+  - academic writing
+  - literature review
+  - citation verification
+  - de-AI
+  - bioinformatics
+  - claude-code
+  - codex
