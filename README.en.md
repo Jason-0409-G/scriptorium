@@ -36,7 +36,7 @@ Works in **Claude Code** and **Codex**.
 **Option 1 · Plugin marketplace (recommended)**
 
 ```
-/plugin marketplace add Jason-0409-G/scriptorium
+/plugin marketplace add https://github.com/Jason-0409-G/scriptorium.git
 /plugin install research-to-paper@scriptorium
 /reload-plugins
 ```

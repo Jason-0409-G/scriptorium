@@ -21,7 +21,7 @@
 **方式一 · 插件市场(推荐)**
 
 ```
-/plugin marketplace add Jason-0409-G/scriptorium
+/plugin marketplace add https://github.com/Jason-0409-G/scriptorium.git
 /plugin install research-to-paper@scriptorium
 /reload-plugins
 ```
