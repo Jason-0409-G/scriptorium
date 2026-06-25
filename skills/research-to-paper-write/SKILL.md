@@ -48,11 +48,15 @@ Both modes then run the same Workflow below (understand → rationale → draft 
    argument and the 3-5 supporting claims, and confirm them with the user. A beautiful paragraph built on the wrong
    claim is wasted; if you cannot restate the argument crisply, read more or ask before continuing.
 
-2. **Plan a writing rationale matrix — not a generic template.**
-   Split the work into real units (a claim, an evidence block, a synthesis move, a heading, a caption), not a fixed
-   IMRaD checklist. For each, write one row in `writing_rationale_matrix.md`: the claim, the evidence behind it, the
-   rhetorical move, the hedge level its evidence allows, and the source it leans on. Row 1 justifies the whole-work
-   framing (why this angle, for this journal/reader). A generic matrix produces a generic paper.
+2. **Lock the controlling motivation, then plan the 论证脉络矩阵 (argument-thread matrix) — not a generic template.**
+   First state the paper's one-sentence red thread and split it both ways — 要论证 (the prioritized claims) and
+   禁止论证 (what to NOT claim; the overclaim guardrails). Then split the work into real units (a claim, an evidence
+   block, a synthesis move, a heading, a caption) and write one row each in `writing_rationale_matrix.md`, every row
+   physically linked to the red thread through three non-empty anchors — 动机链接, 证据/引用锚, 文字动作 — plus its
+   evidence-matched 措辞强度. Row F1 justifies the whole-work framing. **Before drafting, run the offline gate**
+   `python scripts/check_argument_matrix.py writing_rationale_matrix.md` (pure stdlib, no network — works on a plain
+   DeepSeek / no-VPN setup); it rejects empty anchors, generic-phrase reasons, a thin matrix, and a missing 禁止论证
+   side. Do not draft until it passes. See `references/writing-craft.md` §2 for the column spec and the bar.
 
 3. **Draft section by section, with evidence-matched hedging.**
    Write each unit to its matrix row. Match every verb to the strength of its evidence, and keep interpretation in
@@ -97,5 +101,7 @@ Two more knobs come from the `scope_brief.md`:
 
 ## Files
 
-- `references/writing-craft.md` — the hedging ladder, the per-scene section structures, and the rationale-matrix format.
+- `references/writing-craft.md` — the hedging ladder, the per-scene section structures, and the 论证脉络矩阵 format (§2).
+- `scripts/check_argument_matrix.py` — offline gate for the 论证脉络矩阵 (controlling-motivation doublet + per-row
+  anchors + no generic reasons + row-count floor); pure stdlib, runs with no network (DeepSeek / no-VPN friendly).
 - Review and de-AI live in their own sub-skills: `research-to-paper-audit` and `research-to-paper-humanize`.

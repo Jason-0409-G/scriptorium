@@ -21,17 +21,50 @@ demonstrates / confirms / proves / establishes / validates
 - A **proposed indicator / marker / mechanism** stays **"candidate / proposed / putative"** until validated.
 - The rule of thumb: the *organism / experiment* can confirm; the *gene / model* can only predict.
 
-## 2. Writing rationale matrix (plan before drafting)
+## 2. 论证脉络矩阵 (argument-thread matrix) — plan before drafting
 
-`writing_rationale_matrix.md` — one row per real unit (claim, evidence block, synthesis move, heading, caption).
-Not a fixed IMRaD checklist. Columns:
+Before any prose, lock the controlling motivation, then compile it into a per-unit matrix in
+`writing_rationale_matrix.md`. This is the execution plan, not a post-hoc summary — the manuscript is drafted row by
+row from it, and every paragraph in the final draft should trace back to one row.
 
-| Unit | Claim it makes | Evidence behind it | Rhetorical move | Hedge level | Source / SOTA |
-|---|---|---|---|---|---|
+**2a. Controlling motivation (双向门).** At the top of the file, state the paper's one-sentence red thread, then split
+it both ways — what the paper WILL argue and, just as important, what it must NOT argue:
 
-Row 1 justifies the whole-work framing: why this angle, for this journal and reader. Every later row must carry a
-concrete claim, its evidence, and the move it performs — not a label like "background paragraph". A generic matrix
-produces a generic paper, so push each row to be specific before any prose is written.
+```
+红线动机 (one sentence): <the single controlling claim>
+- 要论证 (prioritized claims): <2-4 specific claims this paper makes>
+- 禁止论证 (claims to avoid): <what to NOT claim — the overclaim guardrails>
+```
+
+The 禁止论证 side is what stops later sections from drifting into generic claims or overreaching the evidence. For a
+deep-sea / 生信 indicator paper that means things like: stay candidate/proposed and never "validated"; do not
+extrapolate an absolute carbon flux from n=1; do not claim an ecosystem-scale effect off a single strain's abundance.
+
+**2b. The matrix.** One row per smallest writing unit that needs a deliberate choice (a claim, an evidence block, a
+synthesis move, a heading, a caption). If one paragraph has two functions, split it into two rows. Columns:
+
+| 行号 Row | 写作单元 Unit | 论点/功能 Claim | 动机链接 Motivation link | 证据/引用锚 Evidence·cite | 措辞强度 Hedge | 结构模式 Pattern/SOTA | 文字动作 Text move | 落点检查 Final check |
+|---|---|---|---|---|---|---|---|---|
+
+Row **F1** is the framework row: it argues the whole-work control structure (why this angle, for this venue and
+reader) in 2-4 sentences per cell — a design memo, not a one-liner. Every later row must physically connect to the
+red thread through three non-empty, specific anchors: **动机链接** (how this unit serves the motivation),
+**证据/引用锚** (the specific datum or the one reference it leans on — move evidence next to the claim it supports),
+and **文字动作** (the concrete move to make). 措辞强度 carries the evidence-matched hedge (predicted vs confirmed, §1).
+
+**2c. Reason quality bar.** A generic reason ("提升清晰度 / 润色 / make academic / improve clarity") is not a reason and
+fails the gate. Write 2-4 sentences in the important cells, not keywords. Use at least 8 rows for an ordinary paper; a
+complex one often needs 20-60. Where evidence or a citation is missing, write `[需要数据: …]` / `[需要引用: …]` rather
+than inventing one. A generic matrix produces a generic paper.
+
+**2d. Gate before drafting (offline).** Run the local validator — pure stdlib, no network, so it works on a plain
+DeepSeek setup with no VPN/proxy:
+
+    python scripts/check_argument_matrix.py writing_rationale_matrix.md   # --min-rows N raises the floor
+
+It checks the doublet (both 要/禁止 sides present), the F1 framework row, the row-count floor, every row's three
+anchors non-empty and specific, and rejects generic-phrase cells. Do not draft until it passes — a matrix that
+passes is the proof the paper has a spine before a single sentence is written.
 
 ## 3. Per-scene structure
 
