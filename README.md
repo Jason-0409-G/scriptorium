@@ -50,14 +50,15 @@ bash install.sh codex           # macOS / Linux
 
 ## 更新
 
-本仓库每次推送都自动算一个新版本(`plugin.json` 不固定版本号,改用 git commit SHA),已安装的版本这样更新到最新:
+本插件用**语义化版本号**(`.claude-plugin/plugin.json` 的 `version`)。**只有版本号 bump 时,用户才会收到更新**;每版改了什么见根目录 [`CHANGELOG.md`](CHANGELOG.md)。已安装的版本这样更新到最新:
 
 **插件市场安装**
 ```
-/plugin marketplace update scriptorium
-/reload-plugins
+/plugin marketplace update scriptorium          # 拉取最新目录
+/plugin update research-to-paper@scriptorium    # 装上新版本
+/reload-plugins                                 # 本会话立即生效(或重启)
 ```
-`marketplace update` 拉取最新并更新已装插件;`/reload-plugins` 让本会话立即生效,或重启 Claude Code 亦可。
+也可在 `/plugin` → Marketplaces 里给 `scriptorium` 开 **auto-update** 自动更新。
 
 **脚本安装**
 ```bash

@@ -66,16 +66,17 @@ use them. `bash install.sh all` installs to both at once.
 
 ## Update
 
-Every push to this repo is automatically a new version (`plugin.json` pins no version number, so Claude Code uses
-the git commit SHA). To update an installed copy to the latest:
+This plugin uses **semantic versioning** (the `version` field in `.claude-plugin/plugin.json`). **Users only receive
+an update when you bump that version**; what changed in each release is in [`CHANGELOG.md`](CHANGELOG.md). To update an
+installed copy to the latest:
 
 **If installed from the marketplace**
 ```
-/plugin marketplace update scriptorium
-/reload-plugins
+/plugin marketplace update scriptorium          # pull the latest catalog
+/plugin update research-to-paper@scriptorium    # install the new version
+/reload-plugins                                 # apply in this session (or restart)
 ```
-`marketplace update` fetches the latest and updates installed plugins; `/reload-plugins` applies it in the current
-session, or just restart Claude Code.
+You can also enable **auto-update** for the `scriptorium` marketplace under `/plugin` → Marketplaces.
 
 **If installed via the script**
 ```bash
