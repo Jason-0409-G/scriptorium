@@ -51,7 +51,10 @@ def _get(url, headers=None, raw=False, tries=3):
                 data = r.read().decode("utf-8", "replace")
             return data if raw else json.loads(data)
         except urllib.error.HTTPError as e:
-            if 400 <= e.code < 500 and e.code != 429:   # permanent client error — don't retry
+            # 429/403/408 are commonly transient rate-limits — EBI/AlphaFold and Cloudflare-fronted
+            # services return 403 when throttled, so back-to-back agent-driven calls silently 0 out
+            # if we treat 403 as permanent. Other 4xx are genuine client errors — don't retry those.
+            if 400 <= e.code < 500 and e.code not in (403, 408, 429):
                 return None
             time.sleep(2 ** i)
         except Exception:
@@ -91,13 +94,70 @@ def _summ_label(d):
     return d.get("uid", "")
 
 
+# ---- CAZy abbreviation → NCBI's spelled-out vocabulary (validated against live NCBI counts) ----
+# NCBI esearch does literal AND-matching and does NOT index CAZy abbreviations as synonyms,
+# so a natural query like "Shewanella GH3 beta-glucosidase" returns 0 even though hundreds of
+# such proteins exist (their deflines read "glycoside hydrolase family 3 protein"). GH/GT need
+# BOTH spellings OR'd — glycoside vs glycosyl, one word vs two — each carries records the other
+# misses; PL/CE/CBM need only one form (NCBI normalizes the hyphen, counts were identical); AA
+# keeps only the canonical name (adding LPMO would wrongly broaden AA1/AA2 = laccase/peroxidase).
+_CAZY_EXPAND = {
+    "GH":  lambda n: f'("glycoside hydrolase family {n}" OR "glycosyl hydrolase family {n}")',
+    "GT":  lambda n: f'("glycosyltransferase family {n}" OR "glycosyl transferase family {n}")',
+    "PL":  lambda n: f'"polysaccharide lyase family {n}"',
+    "CE":  lambda n: f'"carbohydrate esterase family {n}"',
+    "CBM": lambda n: f'"carbohydrate-binding module family {n}"',
+    "AA":  lambda n: f'"auxiliary activity family {n}"',
+}
+_CAZY_RE = re.compile(r"\b(GH|GT|CBM|PL|CE|AA)(\d+)\b", re.IGNORECASE)
+
+
+def _expand_cazy(term):
+    """Return (expanded_term, [(abbrev, expansion), ...]); ('', []) if no CAZy token present."""
+    notes = []
+    def repl(m):
+        cls, n = m.group(1).upper(), m.group(2)
+        rew = _CAZY_EXPAND[cls](n)
+        notes.append((m.group(0), rew))
+        return rew
+    new = _CAZY_RE.sub(repl, term)
+    return (new, notes) if notes else ("", [])
+
+
+def _entrez_esearch(db, term, retmax):
+    r = _get(f"{EUTILS}/esearch.fcgi?db={urllib.parse.quote(db)}&retmax={retmax}"
+             f"&retmode=json&term={urllib.parse.quote(term)}" + _ncbi_auth())
+    es = ((r or {}).get("esearchresult") or {})
+    notfound = ((es.get("errorlist") or {}).get("phrasesnotfound")) or []
+    return (es.get("idlist") or []), int(es.get("count") or 0), notfound
+
+
 def entrez_search(db, term, retmax=20):
-    """esearch -> esummary on ANY NCBI database; returns normalized records."""
-    ids = _get(f"{EUTILS}/esearch.fcgi?db={urllib.parse.quote(db)}&retmax={retmax}"
-               f"&retmode=json&term={urllib.parse.quote(term)}" + _ncbi_auth())
-    idlist = (((ids or {}).get("esearchresult") or {}).get("idlist")) or []
+    """esearch -> esummary on ANY NCBI database; returns normalized records.
+
+    On a 0-result query containing a CAZy abbreviation (GH3, CBM20…), retry once with the
+    abbreviation expanded to NCBI's spelled-out vocabulary — transparent and meaning-preserving.
+    Never broadens beyond that: a still-empty result gets a diagnostic, not a blind term-drop."""
+    idlist, count, notfound = _entrez_esearch(db, term, retmax)
     if not idlist:
-        return []
+        expanded, notes = _expand_cazy(term)
+        if not expanded:
+            return []
+        idlist, count, notfound = _entrez_esearch(db, expanded, retmax)
+        if not idlist:
+            print(f"[bio] NCBI:{db} '{term}' 及展开后均 0 条。NCBI 为字面 AND 匹配、deflines 用全称；"
+                  f"试着泛化某个具体词(物种限定、beta- 前缀等)再查。", file=sys.stderr)
+            return []
+        rew = "; ".join(f"{a}→{b}" for a, b in notes)
+        print(f"[bio] NCBI:{db} '{term}' 命中 0；已展开 CAZy 缩写({rew}) 重查 → {count} 条", file=sys.stderr)
+    if notfound:                                          # NCBI silently dropped unmatchable terms
+        # Its automatic term mapping discards words it can't index and broadens the rest (an organism
+        # name alone becomes "X"[Organism] OR X[All Fields] → millions of loose hits). The dropped
+        # terms are reported in errorlist.phrasesnotfound — surface them so a relaxed result set is
+        # never mistaken for a precise match. We warn rather than suppress: a real query can carry one
+        # junk token among good ones, where the remaining terms still constrain the result correctly.
+        print(f"[bio] NCBI:{db} 忽略了无法匹配的词 {notfound}（NCBI 索引里没有）；返回的是去掉这些词后的"
+              f"宽结果(约 {count} 条命中)，可能与本意不符——请核对相关性，或改用能匹配的词。", file=sys.stderr)
     time.sleep(0.34)
     summ = _get(f"{EUTILS}/esummary.fcgi?db={urllib.parse.quote(db)}"
                 f"&id={','.join(idlist)}&retmode=json" + _ncbi_auth())
@@ -132,14 +192,33 @@ def entrez_dbs():
 
 
 # ---------------- UniProtKB (proteins) ----------------
+def _uniprot_name(e):
+    """Best human label for a UniProt entry. Swiss-Prot has recommendedName, but most
+    TrEMBL entries only carry a submissionName — reading recommendedName alone leaves
+    ~1/3 of non-model-organism hits (e.g. Shewanella) with a blank label."""
+    pd = e.get("proteinDescription") or {}
+    v = ((pd.get("recommendedName") or {}).get("fullName") or {}).get("value", "")
+    if v:
+        return v
+    for grp in ("submissionNames", "alternativeNames"):
+        for nm in (pd.get(grp) or []):
+            v = (nm.get("fullName") or {}).get("value", "")
+            if v:
+                return v
+    for g in (e.get("genes") or []):
+        v = (g.get("geneName") or {}).get("value", "")
+        if v:
+            return v
+    return ""
+
+
 def uniprot(query, size=20):
     d = _get("https://rest.uniprot.org/uniprotkb/search?"
              f"query={urllib.parse.quote(query)}&format=json&size={size}"
              "&fields=accession,protein_name,organism_name,length,gene_names")
     out = []
     for e in ((d or {}).get("results") or []):
-        name = (((e.get("proteinDescription") or {}).get("recommendedName") or {})
-                .get("fullName") or {}).get("value", "")
+        name = _uniprot_name(e)
         out.append(dict(id=e.get("primaryAccession", ""), label=name,
                         organism=(e.get("organism") or {}).get("scientificName", ""),
                         length=(e.get("sequence") or {}).get("length", ""),
@@ -157,7 +236,7 @@ def pdb(query, rows=20):
     for hit in ((d or {}).get("result_set") or []):
         pid = hit.get("identifier", "")
         title = ""
-        if pid and len(out) < min(rows, 15):         # fetch titles for the first hits only
+        if pid and len(out) < min(rows, 25):         # title for every returned hit (cap 25 to bound per-entry calls)
             meta = _get(f"https://data.rcsb.org/rest/v1/core/entry/{pid}")
             title = ((meta or {}).get("struct") or {}).get("title", "")
             time.sleep(0.1)
@@ -165,9 +244,13 @@ def pdb(query, rows=20):
     return out
 
 
-# ---------------- AlphaFold DB (predicted structures, by UniProt accession) ----------------
-def alphafold(uniprot_acc, _n=None):
-    acc = uniprot_acc.strip().split()[0] if uniprot_acc else ""
+# ---------------- AlphaFold DB (predicted structures) ----------------
+# Official UniProt accession shapes (6 or 10 chars) — used to tell an accession from free text.
+_UNIPROT_ACC_RE = re.compile(
+    r"^([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})$")
+
+
+def _alphafold_fetch(acc):
     d = _get(f"https://alphafold.ebi.ac.uk/api/prediction/{urllib.parse.quote(acc)}")
     out = []
     for m in (d or []):
@@ -176,6 +259,43 @@ def alphafold(uniprot_acc, _n=None):
                         pdb_url=m.get("pdbUrl", ""), cif_url=m.get("cifUrl", ""),
                         source="AlphaFoldDB", summary=m))
     return out
+
+
+def alphafold(query, _n=None):
+    """AlphaFold has no text search — it is keyed by UniProt accession. Given an accession,
+    fetch directly; given free text, resolve it through UniProt and return the first candidate
+    that actually HAS a predicted model (newer TrEMBL entries often have none), so the caller
+    never has to look an accession up by hand."""
+    q = (query or "").strip()
+    first = q.split()[0].upper() if q else ""
+    if _UNIPROT_ACC_RE.match(first):                       # already an accession → direct
+        res = _alphafold_fetch(first)
+        if not res:
+            print(f"[bio] AlphaFold 无 {first} 的预测模型。", file=sys.stderr)
+        return res
+    cands = uniprot(q, size=8)                             # free text → resolve via UniProt
+    if not cands:
+        print(f"[bio] AlphaFold: '{q}' 在 UniProt 查不到蛋白，无法解析登录号。", file=sys.stderr)
+        return []
+    skipped = []
+    for c in cands:
+        acc = (c.get("id") or "").strip()
+        if not acc:
+            continue
+        res = _alphafold_fetch(acc)
+        if res:
+            note = (f"[bio] AlphaFold: 解析 '{q}' → UniProt {acc} "
+                    f"({(c.get('label') or '')[:40]}, {c.get('organism','')})")
+            if skipped:
+                note += f"；跳过前 {len(skipped)} 个无模型的({', '.join(skipped)})"
+            print(note, file=sys.stderr)
+            return res
+        skipped.append(acc)
+        time.sleep(0.2)
+    print(f"[bio] AlphaFold: '{q}' 的前 {len(cands)} 个 UniProt 候选都无预测模型"
+          f"(可能是较新的 TrEMBL 条目): {', '.join(skipped)}。"
+          f"可换更经典的同源蛋白，或拿某个号去 PDB 找实验结构。", file=sys.stderr)
+    return []
 
 
 # ---------------- Europe PMC (literature, incl. preprints) ----------------
